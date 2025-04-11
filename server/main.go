@@ -18,17 +18,17 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
-	"github.com/yourusername/agent-platform/server/api/agent"
-	"github.com/yourusername/agent-platform/server/api/application"
-	"github.com/yourusername/agent-platform/server/api/auth"
-	"github.com/yourusername/agent-platform/server/api/config"
-	"github.com/yourusername/agent-platform/server/api/conversation"
-	"github.com/yourusername/agent-platform/server/api/model"
-	"github.com/yourusername/agent-platform/server/api/project"
-	"github.com/yourusername/agent-platform/server/models"
-	authPkg "github.com/yourusername/agent-platform/server/pkg/auth"
-	"github.com/yourusername/agent-platform/server/pkg/encryption"
-	"github.com/yourusername/agent-platform/server/pkg/middleware"
+	"github.com/zhuiye8/Lyss/server/api/agent"
+	"github.com/zhuiye8/Lyss/server/api/application"
+	"github.com/zhuiye8/Lyss/server/api/auth"
+	"github.com/zhuiye8/Lyss/server/api/config"
+	"github.com/zhuiye8/Lyss/server/api/conversation"
+	"github.com/zhuiye8/Lyss/server/api/model"
+	"github.com/zhuiye8/Lyss/server/api/project"
+	"github.com/zhuiye8/Lyss/server/models"
+	authPkg "github.com/zhuiye8/Lyss/server/pkg/auth"
+	"github.com/zhuiye8/Lyss/server/pkg/encryption"
+	"github.com/zhuiye8/Lyss/server/pkg/middleware"
 )
 
 func main() {
@@ -58,20 +58,36 @@ func main() {
 
 	// 自动迁移模型（仅在开发环境中使用）
 	if viper.GetString("app.env") == "development" {
-		if err := db.AutoMigrate(
-			&models.User{}, 
-			&models.Project{}, 
-			&models.Application{}, 
-			&models.Config{}, 
-			&models.Model{}, 
+		tx := db.Begin()
+
+		// 禁用外键约束检查（PostgreSQL）
+		tx.Exec("SET session_replication_role = 'replica';")
+
+		// 进行迁移
+		if err := tx.AutoMigrate(
+			&models.User{},
+			&models.Config{},
 			&models.ModelConfig{},
+			&models.Model{},
+			&models.KnowledgeBase{},
+			&models.Project{},
+			&models.Application{},
 			&models.Agent{},
 			&models.AgentKnowledgeBase{},
 			&models.Conversation{},
 			&models.Message{},
+			&models.Log{},
+			&models.SystemMetric{},
 		); err != nil {
+			tx.Rollback()
 			zap.L().Fatal("Failed to migrate database", zap.Error(err))
 		}
+
+		// 重新启用外键约束检查
+		tx.Exec("SET session_replication_role = 'origin';")
+
+		// 提交事务
+		tx.Commit()
 	}
 
 	// 初始化JWT管理器
@@ -109,7 +125,7 @@ func main() {
 
 	// 初始化模型服务
 	modelService := model.NewService(db, encryptionService)
-	modelHandler := model.NewHandler(modelService)
+	modelHandler := model.NewHandler(modelService, authMiddleware)
 
 	// 初始化智能体服务
 	agentService := agent.NewService(db)
@@ -152,7 +168,7 @@ func main() {
 		conversationHandler.RegisterRoutes(api)
 	}
 
-	// 启动服务器
+	// 启动服务
 	port := viper.GetString("app.port")
 	if port == "" {
 		port = "8080"

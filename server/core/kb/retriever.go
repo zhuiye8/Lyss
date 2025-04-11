@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/yourusername/myApp/server/core/agent"
+	"github.com/zhuiye8/Lyss/server/core/agent"
 )
 
 // QueryRequest 知识库查询请求
@@ -200,7 +200,7 @@ func GeneratePromptFromResults(results []SearchResult, userQuery string) string 
 	return prompt
 }
 
-// ApplyRAG 应用RAG到Agent的对话
+// ApplyRAG 应用RAG到Agent的对
 func ApplyRAG(ctx context.Context, kbID string, query string, agent *agent.Agent) (string, error) {
 	// 先检索相关知识
 	req := QueryRequest{
@@ -219,9 +219,9 @@ func ApplyRAG(ctx context.Context, kbID string, query string, agent *agent.Agent
 		return agent.Chat(ctx, query)
 	}
 	
-	// 生成增强提示词
+	// 生成增强提示
 	augmentedPrompt := GeneratePromptFromResults(resp.Results, query)
 	
-	// 让Agent处理增强后的提示词
+	// 让Agent处理增强后的提示
 	return agent.Chat(ctx, augmentedPrompt)
 } 

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/agent-platform/server/pkg/auth"
+	"github.com/zhuiye8/Lyss/server/pkg/auth"
 )
 
 // AuthMiddleware 是验证用户认证的中间件

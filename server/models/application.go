@@ -18,6 +18,7 @@ type Application struct {
 	Status      string    `gorm:"type:varchar(20);default:'draft'" json:"status"` // draft, published, archived
 	Config      string    `gorm:"type:jsonb" json:"config"`
 	ModelConfig string    `gorm:"type:jsonb" json:"model_config"`
+	CreatedBy   uuid.UUID `gorm:"type:uuid;not null" json:"created_by"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
@@ -39,6 +40,7 @@ type ApplicationResponse struct {
 	Status      string    `json:"status"`
 	Config      string    `json:"config"`
 	ModelConfig string    `json:"model_config"`
+	CreatedBy   uuid.UUID `json:"created_by"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -54,6 +56,7 @@ func (a *Application) ToResponse() ApplicationResponse {
 		Status:      a.Status,
 		Config:      a.Config,
 		ModelConfig: a.ModelConfig,
+		CreatedBy:   a.CreatedBy,
 		CreatedAt:   a.CreatedAt,
 		UpdatedAt:   a.UpdatedAt,
 	}

@@ -21,7 +21,7 @@ const (
 	ScopeApplication ConfigScope = "application"
 )
 
-// Config 模型表示系统配置项
+// Config 模型表示系统配置定义
 type Config struct {
 	ID        uuid.UUID   `gorm:"type:uuid;primary_key" json:"id"`
 	Key       string      `gorm:"type:varchar(100);not null;uniqueIndex:idx_config_scope_key" json:"key"`

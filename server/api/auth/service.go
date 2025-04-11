@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourusername/agent-platform/server/models"
-	"github.com/yourusername/agent-platform/server/pkg/auth"
+	"github.com/zhuiye8/Lyss/server/models"
+	"github.com/zhuiye8/Lyss/server/pkg/auth"
 	"gorm.io/gorm"
 )
 
@@ -126,7 +126,7 @@ func (s *Service) Login(req LoginRequest) (*LoginResponse, error) {
 		User:         user.ToResponse(),
 		Token:        token,
 		RefreshToken: refreshToken,
-		ExpiresAt:    time.Now().Add(s.jwtManager.config.TokenExpiry),
+		ExpiresAt:    time.Now().Add(24 * time.Hour), // 假设令牌有效期为24小时
 	}, nil
 }
 
@@ -167,7 +167,7 @@ func (s *Service) RefreshToken(req RefreshRequest) (*RefreshResponse, error) {
 	// 返回响应
 	return &RefreshResponse{
 		Token:     token,
-		ExpiresAt: time.Now().Add(s.jwtManager.config.TokenExpiry),
+		ExpiresAt: time.Now().Add(24 * time.Hour), // 假设令牌有效期为24小时
 	}, nil
 }
 

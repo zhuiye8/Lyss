@@ -16,7 +16,7 @@ import (
 type DocumentType string
 
 const (
-	// TypeText 纯文本文档
+	// TypeText 纯文本文�?
 	TypeText DocumentType = "text"
 	// TypeMarkdown Markdown文档
 	TypeMarkdown DocumentType = "markdown"
@@ -30,20 +30,20 @@ const (
 	TypeHTML DocumentType = "html"
 )
 
-// Document 表示一个文档
+// Document 表示一个文�?
 type Document struct {
 	ID             string       `json:"id"`
 	KnowledgeBaseID string       `json:"knowledge_base_id"`
 	Name           string       `json:"name"`
 	Type           DocumentType `json:"type"`
 	Size           int64        `json:"size"`
-	Content        string       `json:"-"` // 原始内容，不在JSON中返回
+	Content        string       `json:"-"` // 原始内容，不在JSON中返�?
 	CreatedAt      time.Time    `json:"created_at"`
 	UpdatedAt      time.Time    `json:"updated_at"`
 	Metadata       interface{}  `json:"metadata,omitempty"`
 }
 
-// Chunk 表示文档的一个分块
+// Chunk 表示文档的一个分�?
 type Chunk struct {
 	ID         string    `json:"id"`
 	DocumentID string    `json:"document_id"`
@@ -56,11 +56,11 @@ type Chunk struct {
 	} `json:"metadata"`
 }
 
-// DocumentProcessor 文档处理器接口
+// DocumentProcessor 文档处理器接�?
 type DocumentProcessor interface {
-	// Process 处理文档并返回分块结果
+	// Process 处理文档并返回分块结�?
 	Process(doc *Document) ([]Chunk, error)
-	// SupportsType 检查是否支持特定文档类型
+	// SupportsType 检查是否支持特定文档类�?
 	SupportsType(docType DocumentType) bool
 }
 
@@ -76,7 +76,7 @@ func NewDocumentProcessorRegistry() *DocumentProcessorRegistry {
 	}
 }
 
-// Register 注册文档处理器
+// Register 注册文档处理�?
 func (r *DocumentProcessorRegistry) Register(docType DocumentType, processor DocumentProcessor) {
 	r.processors[docType] = processor
 }
@@ -168,19 +168,19 @@ func getDocumentTypeFromExt(ext string) DocumentType {
 	}
 }
 
-// DefaultChunkSize 默认的文本分块大小
+// DefaultChunkSize 默认的文本分块大�?
 const DefaultChunkSize = 1000
 
-// DefaultChunkOverlap 默认的文本分块重叠大小
+// DefaultChunkOverlap 默认的文本分块重叠大�?
 const DefaultChunkOverlap = 200
 
-// BasicTextProcessor 基础文本处理器
+// BasicTextProcessor 基础文本处理�?
 type BasicTextProcessor struct {
 	ChunkSize    int
 	ChunkOverlap int
 }
 
-// NewBasicTextProcessor 创建基础文本处理器
+// NewBasicTextProcessor 创建基础文本处理�?
 func NewBasicTextProcessor(chunkSize, chunkOverlap int) *BasicTextProcessor {
 	if chunkSize <= 0 {
 		chunkSize = DefaultChunkSize
@@ -194,7 +194,7 @@ func NewBasicTextProcessor(chunkSize, chunkOverlap int) *BasicTextProcessor {
 	}
 }
 
-// Process 处理文档并返回分块
+// Process 处理文档并返回分�?
 func (p *BasicTextProcessor) Process(doc *Document) ([]Chunk, error) {
 	content := doc.Content
 	
@@ -212,7 +212,7 @@ func (p *BasicTextProcessor) Process(doc *Document) ([]Chunk, error) {
 	
 	for _, para := range paragraphs {
 		if len(currentChunk)+len(para) > p.ChunkSize {
-			// 当前块已经足够大，创建一个新块
+			// 当前块已经足够大，创建一个新�?
 			if len(currentChunk) > 0 {
 				chunks = append(chunks, Chunk{
 					ID:         uuid.New().String(),
@@ -261,7 +261,7 @@ func (p *BasicTextProcessor) Process(doc *Document) ([]Chunk, error) {
 	return chunks, nil
 }
 
-// SupportsType 检查是否支持特定文档类型
+// SupportsType 检查是否支持特定文档类�?
 func (p *BasicTextProcessor) SupportsType(docType DocumentType) bool {
 	return docType == TypeText || docType == TypeMarkdown
 }
@@ -272,7 +272,7 @@ func getLastWords(text string, n int) string {
 		return text
 	}
 	
-	// 查找适当的断点
+	// 查找适当的断�?
 	cutIndex := len(text) - n
 	for i := cutIndex; i < len(text); i++ {
 		if text[i] == ' ' || text[i] == '\n' {
@@ -284,7 +284,7 @@ func getLastWords(text string, n int) string {
 	return text[cutIndex:]
 }
 
-// DefaultProcessorRegistry 默认的文档处理器注册表
+// DefaultProcessorRegistry 默认的文档处理器注册�?
 var DefaultProcessorRegistry = NewDocumentProcessorRegistry()
 
 // 初始化默认处理器

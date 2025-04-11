@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/yourusername/agent-platform/server/models"
+	"github.com/zhuiye8/Lyss/server/models"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )

@@ -67,7 +67,7 @@ func (f *AgentFactory) registerDefaultTemplates() {
 		Type:         ConversationalAgent,
 		Name:         "对话智能体",
 		Description:  "通用对话型智能体，适合日常交流和信息提供",
-		SystemPrompt: "你是一个有帮助的AI助手。回答用户的问题时要准确、有见地且富有帮助。",
+		SystemPrompt: "你是一个有帮助的AI助手。回答用户的问题时要准确、有见地且富有帮助性",
 		DefaultTools: []string{},
 		Config: map[string]interface{}{
 			"temperature": 0.7,
@@ -80,7 +80,7 @@ func (f *AgentFactory) registerDefaultTemplates() {
 		Type:         RAGAgent,
 		Name:         "知识库智能体",
 		Description:  "基于知识库的智能体，可以回答特定领域的问题",
-		SystemPrompt: "你是一个专业的知识库助手。根据提供的知识回答用户问题，如果知识库中没有相关信息，请明确说明。",
+		SystemPrompt: "你是一个专业的知识库助手。根据提供的知识回答用户问题，如果知识库中没有相关信息，请明确说明",
 		DefaultTools: []string{"knowledge_search"},
 		Config: map[string]interface{}{
 			"temperature": 0.5,
@@ -93,7 +93,7 @@ func (f *AgentFactory) registerDefaultTemplates() {
 		Type:         WorkflowAgent,
 		Name:         "工作流智能体",
 		Description:  "可以执行多步骤任务的智能体",
-		SystemPrompt: "你是一个工作流自动化助手。你可以协助用户完成多步骤任务，按照逻辑顺序使用工具完成目标。",
+		SystemPrompt: "你是一个工作流自动化助手。你可以协助用户完成多步骤任务，按照逻辑顺序使用工具完成目标",
 		DefaultTools: []string{"web_search", "calculator"},
 		Config: map[string]interface{}{
 			"temperature": 0.3,

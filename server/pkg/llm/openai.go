@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/yourusername/agent-platform/server/models"
+	"github.com/zhuiye8/Lyss/server/models"
 )
 
 // OpenAIAdapter 适配OpenAI接口
@@ -20,7 +20,7 @@ type OpenAIAdapter struct {
 	httpClient *http.Client
 }
 
-// NewOpenAIAdapter 创建OpenAI适配器
+// NewOpenAIAdapter 创建OpenAI适配�?
 func NewOpenAIAdapter(config models.ModelProviderConfig) *OpenAIAdapter {
 	baseURL := "https://api.openai.com/v1"
 	if config.BaseURL != "" {
@@ -142,7 +142,7 @@ func (a *OpenAIAdapter) Chat(ctx context.Context, request ChatRequest) (*ChatRes
 	
 	// 构建请求
 	openaiReq := OpenAIChatRequest{
-		Model:       "gpt-3.5-turbo", // 默认模型，实际应该使用配置中的模型
+		Model:       "gpt-3.5-turbo", // 默认模型，实际应该使用配置中的模�?
 		Messages:    messages,
 		Temperature: request.Temperature,
 		MaxTokens:   request.MaxTokens,
@@ -153,7 +153,7 @@ func (a *OpenAIAdapter) Chat(ctx context.Context, request ChatRequest) (*ChatRes
 		openaiReq.Functions = functions
 	}
 	
-	// 序列化请求
+	// 序列化请�?
 	jsonData, err := json.Marshal(openaiReq)
 	if err != nil {
 		return nil, err
@@ -171,10 +171,10 @@ func (a *OpenAIAdapter) Chat(ctx context.Context, request ChatRequest) (*ChatRes
 		req.Header.Set("OpenAI-Organization", a.orgID)
 	}
 	
-	// 记录开始时间
+	// 记录开始时�?
 	startTime := time.Now()
 	
-	// 发送请求
+	// 发送请�?
 	resp, err := a.httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -184,7 +184,7 @@ func (a *OpenAIAdapter) Chat(ctx context.Context, request ChatRequest) (*ChatRes
 	// 计算延迟
 	latency := time.Since(startTime)
 	
-	// 检查响应状态
+	// 检查响应状�?
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("%w: %s", ErrAPIError, string(bodyBytes))
@@ -196,12 +196,12 @@ func (a *OpenAIAdapter) Chat(ctx context.Context, request ChatRequest) (*ChatRes
 		return nil, err
 	}
 	
-	// 检查是否返回有效结果
+	// 检查是否返回有效结�?
 	if len(openaiResp.Choices) == 0 {
 		return nil, fmt.Errorf("OpenAI返回了空响应")
 	}
 	
-	// 构建我们的响应格式
+	// 构建我们的响应格�?
 	response := &ChatResponse{
 		ID:               openaiResp.ID,
 		PromptTokens:     openaiResp.Usage.PromptTokens,
@@ -210,7 +210,7 @@ func (a *OpenAIAdapter) Chat(ctx context.Context, request ChatRequest) (*ChatRes
 		Model:            openaiResp.Model,
 		FinishReason:     openaiResp.Choices[0].FinishReason,
 		Latency:          latency,
-		// 费用将由调用者根据模型定价计算
+		// 费用将由调用者根据模型定价计�?
 	}
 	
 	// 处理消息
@@ -252,7 +252,7 @@ func (a *OpenAIAdapter) Embedding(ctx context.Context, request EmbeddingRequest)
 		Input: request.Texts,
 	}
 	
-	// 序列化请求
+	// 序列化请�?
 	jsonData, err := json.Marshal(openaiReq)
 	if err != nil {
 		return nil, err
@@ -270,10 +270,10 @@ func (a *OpenAIAdapter) Embedding(ctx context.Context, request EmbeddingRequest)
 		req.Header.Set("OpenAI-Organization", a.orgID)
 	}
 	
-	// 记录开始时间
+	// 记录开始时�?
 	startTime := time.Now()
 	
-	// 发送请求
+	// 发送请�?
 	resp, err := a.httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -283,7 +283,7 @@ func (a *OpenAIAdapter) Embedding(ctx context.Context, request EmbeddingRequest)
 	// 计算延迟
 	latency := time.Since(startTime)
 	
-	// 检查响应状态
+	// 检查响应状�?
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		return nil, fmt.Errorf("%w: %s", ErrAPIError, string(bodyBytes))
@@ -295,7 +295,7 @@ func (a *OpenAIAdapter) Embedding(ctx context.Context, request EmbeddingRequest)
 		return nil, err
 	}
 	
-	// 构建我们的响应格式
+	// 构建我们的响应格�?
 	embeddings := make([]EmbeddingVector, len(openaiResp.Data))
 	for i, data := range openaiResp.Data {
 		embeddings[i] = EmbeddingVector{
@@ -310,7 +310,7 @@ func (a *OpenAIAdapter) Embedding(ctx context.Context, request EmbeddingRequest)
 		Model:      openaiResp.Model,
 		TokenCount: openaiResp.Usage.TotalTokens,
 		Latency:    latency,
-		// 费用将由调用者根据模型定价计算
+		// 费用将由调用者根据模型定价计�?
 	}
 	
 	return response, nil

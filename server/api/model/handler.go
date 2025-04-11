@@ -3,22 +3,61 @@ package model
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/yourusername/agent-platform/server/models"
-	"github.com/yourusername/agent-platform/server/pkg/auth"
+	"github.com/zhuiye8/Lyss/server/models"
+	"github.com/zhuiye8/Lyss/server/pkg/auth"
+	"github.com/zhuiye8/Lyss/server/pkg/middleware"
 )
+
+// ModelResponse 模型API响应
+type ModelResponse struct {
+	ID          uuid.UUID          `json:"id"`
+	Name        string             `json:"name"`
+	Provider    models.ModelProvider `json:"provider"`
+	ModelID     string             `json:"model_id"`
+	Type        models.ModelType    `json:"type"`
+	Description string             `json:"description"`
+	Capabilities []string           `json:"capabilities"`
+	Parameters  models.ModelParameters `json:"parameters"`
+	MaxTokens   int                `json:"max_tokens"`
+	TokenCost   struct {
+		Prompt     float64 `json:"prompt"`
+		Completion float64 `json:"completion"`
+	} `json:"token_cost"`
+	Status      models.ModelStatus `json:"status"`
+	IsSystem    bool               `json:"is_system"`
+	CreatedAt   time.Time          `json:"created_at"`
+}
+
+// ModelConfigResponse 是返回给客户端的模型配置结构
+type ModelConfigResponse struct {
+	ID             uuid.UUID       `json:"id"`
+	Name           string          `json:"name"`
+	Description    string          `json:"description"`
+	Model          ModelResponse   `json:"model"`
+	Parameters     models.ModelParameters `json:"parameters"`
+	IsShared       bool            `json:"is_shared"`
+	UsageMetrics   models.ModelUsageMetrics `json:"usage_metrics"`
+	OrganizationID uuid.UUID       `json:"organization_id"`
+	CreatedBy      uuid.UUID       `json:"created_by"`
+	CreatedAt      time.Time       `json:"created_at"`
+	UpdatedAt      time.Time       `json:"updated_at"`
+}
 
 // Handler 处理模型相关的请求
 type Handler struct {
-	service *Service
+	service        *Service
+	authMiddleware *middleware.AuthMiddleware
 }
 
 // NewHandler 创建模型处理器
-func NewHandler(service *Service) *Handler {
+func NewHandler(service *Service, authMiddleware *middleware.AuthMiddleware) *Handler {
 	return &Handler{
-		service: service,
+		service:        service,
+		authMiddleware: authMiddleware,
 	}
 }
 
@@ -27,24 +66,24 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	modelGroup := router.Group("/models")
 	{
 		// 模型管理路由
-		modelGroup.GET("", auth.RequireAuth(), h.GetModels)
-		modelGroup.GET("/:id", auth.RequireAuth(), h.GetModel)
-		modelGroup.POST("", auth.RequireAuth(), h.CreateModel)
-		modelGroup.PUT("/:id", auth.RequireAuth(), h.UpdateModel)
-		modelGroup.DELETE("/:id", auth.RequireAuth(), h.DeleteModel)
+		modelGroup.GET("", h.authMiddleware.Authenticate(), h.GetModels)
+		modelGroup.GET("/:id", h.authMiddleware.Authenticate(), h.GetModel)
+		modelGroup.POST("", h.authMiddleware.Authenticate(), h.CreateModel)
+		modelGroup.PUT("/:id", h.authMiddleware.Authenticate(), h.UpdateModel)
+		modelGroup.DELETE("/:id", h.authMiddleware.Authenticate(), h.DeleteModel)
 		
 		// 模型配置路由
-		modelGroup.GET("/configs", auth.RequireAuth(), h.GetModelConfigs)
-		modelGroup.GET("/configs/:id", auth.RequireAuth(), h.GetModelConfig)
-		modelGroup.POST("/configs", auth.RequireAuth(), h.CreateModelConfig)
-		modelGroup.PUT("/configs/:id", auth.RequireAuth(), h.UpdateModelConfig)
-		modelGroup.DELETE("/configs/:id", auth.RequireAuth(), h.DeleteModelConfig)
+		modelGroup.GET("/configs", h.authMiddleware.Authenticate(), h.GetModelConfigs)
+		modelGroup.GET("/configs/:id", h.authMiddleware.Authenticate(), h.GetModelConfig)
+		modelGroup.POST("/configs", h.authMiddleware.Authenticate(), h.CreateModelConfig)
+		modelGroup.PUT("/configs/:id", h.authMiddleware.Authenticate(), h.UpdateModelConfig)
+		modelGroup.DELETE("/configs/:id", h.authMiddleware.Authenticate(), h.DeleteModelConfig)
 		
 		// 模型提供者路由
-		modelGroup.GET("/providers", auth.RequireAuth(), h.GetProviders)
+		modelGroup.GET("/providers", h.authMiddleware.Authenticate(), h.GetProviders)
 		
 		// 测试模型连接
-		modelGroup.POST("/test-connection", auth.RequireAuth(), h.TestModelConnection)
+		modelGroup.POST("/test-connection", h.authMiddleware.Authenticate(), h.TestModelConnection)
 	}
 }
 
@@ -86,9 +125,9 @@ func (h *Handler) GetModels(c *gin.Context) {
 	}
 	
 	// 构建响应
-	var responses []models.ModelResponse
+	var responses []ModelResponse
 	for _, model := range models {
-		responses = append(responses, models.ModelResponse{
+		responses = append(responses, ModelResponse{
 			ID:           model.ID,
 			Name:         model.Name,
 			Provider:     model.Provider,
@@ -143,7 +182,7 @@ func (h *Handler) GetModel(c *gin.Context) {
 	}
 	
 	// 构建响应
-	response := models.ModelResponse{
+	response := ModelResponse{
 		ID:           model.ID,
 		Name:         model.Name,
 		Provider:     model.Provider,
@@ -233,7 +272,7 @@ func (h *Handler) CreateModel(c *gin.Context) {
 	}
 	
 	// 构建响应
-	response := models.ModelResponse{
+	response := ModelResponse{
 		ID:           model.ID,
 		Name:         model.Name,
 		Provider:     model.Provider,
@@ -404,9 +443,9 @@ func (h *Handler) GetModelConfigs(c *gin.Context) {
 	}
 	
 	// 构建响应
-	var responses []models.ConfigResponse
+	var responses []ModelConfigResponse
 	for _, config := range configs {
-		modelResponse := models.ModelResponse{
+		modelResponse := ModelResponse{
 			ID:           config.Model.ID,
 			Name:         config.Model.Name,
 			Provider:     config.Model.Provider,
@@ -428,7 +467,7 @@ func (h *Handler) GetModelConfigs(c *gin.Context) {
 			CreatedAt: config.Model.CreatedAt,
 		}
 		
-		responses = append(responses, models.ConfigResponse{
+		responses = append(responses, ModelConfigResponse{
 			ID:             config.ID,
 			Name:           config.Name,
 			Description:    config.Description,
@@ -490,7 +529,7 @@ func (h *Handler) GetModelConfig(c *gin.Context) {
 	}
 	
 	// 构建响应
-	modelResponse := models.ModelResponse{
+	modelResponse := ModelResponse{
 		ID:           config.Model.ID,
 		Name:         config.Model.Name,
 		Provider:     config.Model.Provider,
@@ -512,7 +551,7 @@ func (h *Handler) GetModelConfig(c *gin.Context) {
 		CreatedAt: config.Model.CreatedAt,
 	}
 	
-	response := models.ConfigResponse{
+	response := ModelConfigResponse{
 		ID:             config.ID,
 		Name:           config.Name,
 		Description:    config.Description,
@@ -589,7 +628,7 @@ func (h *Handler) CreateModelConfig(c *gin.Context) {
 	}
 	
 	// 构建响应
-	modelResponse := models.ModelResponse{
+	modelResponse := ModelResponse{
 		ID:           fullConfig.Model.ID,
 		Name:         fullConfig.Model.Name,
 		Provider:     fullConfig.Model.Provider,
@@ -611,7 +650,7 @@ func (h *Handler) CreateModelConfig(c *gin.Context) {
 		CreatedAt: fullConfig.Model.CreatedAt,
 	}
 	
-	response := models.ConfigResponse{
+	response := ModelConfigResponse{
 		ID:             fullConfig.ID,
 		Name:           fullConfig.Name,
 		Description:    fullConfig.Description,
@@ -748,7 +787,7 @@ func (h *Handler) GetProviders(c *gin.Context) {
 		},
 		{
 			ID:          string(models.ModelProviderAli),
-			Name:        "阿里云",
+			Name:        "阿里",
 			Description: "阿里云通义系列模型",
 			Website:     "https://www.aliyun.com/",
 			DocURL:      "https://help.aliyun.com/document_detail/2400395.html",

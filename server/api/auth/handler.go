@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/yourusername/agent-platform/server/pkg/middleware"
+	"github.com/zhuiye8/Lyss/server/pkg/middleware"
 )
 
 // Handler 处理认证相关的HTTP请求

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourusername/agent-platform/server/models"
+	"github.com/zhuiye8/Lyss/server/models"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -188,11 +188,11 @@ func (s *Service) SendMessage(conversationID uuid.UUID, req models.SendMessageRe
 	}
 
 	// 生成AI响应（示例，实际需要调用LLM服务）
-	// TODO: 当Agent运行时实现后，这里会调用Agent运行时
+	// TODO: 当Agent运行时实现后，这里会调用Agent运行
 	aiResponse := models.Message{
 		ConversationID: conversationID,
 		Role:           "assistant",
-		Content:        "这是一个模拟的AI响应。实际功能将在Agent运行时实现后完成。",
+		Content:        "这是一个模拟的AI响应。实际功能将在Agent运行时实现后完成",
 		Metadata:       models.JSONMap{},
 	}
 
@@ -260,11 +260,11 @@ func (s *Service) RegenerateResponse(conversationID uuid.UUID, userID uuid.UUID)
 	}
 
 	// 生成新的AI响应（示例，实际需要调用LLM服务）
-	// TODO: 当Agent运行时实现后，这里会调用Agent运行时
+	// TODO: 当Agent运行时实现后，这里会调用Agent运行
 	newAIResponse := models.Message{
 		ConversationID: conversationID,
 		Role:           "assistant",
-		Content:        "这是一个重新生成的模拟AI响应。实际功能将在Agent运行时实现后完成。",
+		Content:        "这是一个重新生成的模拟AI响应。实际功能将在Agent运行时实现后完成",
 		Metadata:       models.JSONMap{},
 	}
 

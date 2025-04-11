@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/yourusername/agent-platform/server/models"
+	"github.com/zhuiye8/Lyss/server/models"
 )
 
 // MetricsCollector 系统指标收集器

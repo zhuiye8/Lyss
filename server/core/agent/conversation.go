@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bytedance/eino"
+	"github.com/cloudwego/eino"
 	"github.com/google/uuid"
 )
 

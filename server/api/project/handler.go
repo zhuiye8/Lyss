@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/yourusername/agent-platform/server/models"
-	"github.com/yourusername/agent-platform/server/pkg/middleware"
+	"github.com/zhuiye8/Lyss/server/models"
+	"github.com/zhuiye8/Lyss/server/pkg/middleware"
 )
 
 // Handler 处理项目相关的HTTP请求

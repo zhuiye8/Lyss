@@ -4,18 +4,18 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/bytedance/eino"
+	"github.com/cloudwego/eino"
 )
 
-// SimpleMemory 是一个简单的内存实现，用于存储对话历史
+// SimpleMemory 是一个简单的内存实现，用于存储对话历�?
 type SimpleMemory struct {
 	messages []eino.Message
 	maxSize  int
 	mu       sync.Mutex
 }
 
-// NewSimpleMemory 创建一个新的简单内存实例
-// maxSize 指定最大消息数量，如果为0则不限制
+// NewSimpleMemory 创建一个新的简单内存实�?
+// maxSize 指定最大消息数量，如果�?则不限制
 func NewSimpleMemory(maxSize int) *SimpleMemory {
 	return &SimpleMemory{
 		messages: make([]eino.Message, 0),
@@ -23,7 +23,7 @@ func NewSimpleMemory(maxSize int) *SimpleMemory {
 	}
 }
 
-// AddMessage 添加消息到内存
+// AddMessage 添加消息到内�?
 func (m *SimpleMemory) AddMessage(msg eino.Message) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -37,7 +37,7 @@ func (m *SimpleMemory) AddMessage(msg eino.Message) error {
 	return nil
 }
 
-// GetMessages 获取所有消息
+// GetMessages 获取所有消�?
 func (m *SimpleMemory) GetMessages() ([]eino.Message, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -49,7 +49,7 @@ func (m *SimpleMemory) GetMessages() ([]eino.Message, error) {
 	return result, nil
 }
 
-// Clear 清除所有消息
+// Clear 清除所有消�?
 func (m *SimpleMemory) Clear() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -58,12 +58,12 @@ func (m *SimpleMemory) Clear() error {
 	return nil
 }
 
-// GetLastUserMessage 获取最后一条用户消息
+// GetLastUserMessage 获取最后一条用户消�?
 func (m *SimpleMemory) GetLastUserMessage() (eino.Message, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	// 反向遍历消息查找最后一条用户消息
+	// 反向遍历消息查找最后一条用户消�?
 	for i := len(m.messages) - 1; i >= 0; i-- {
 		if m.messages[i].Role == eino.RoleUser {
 			return m.messages[i], nil
@@ -73,12 +73,12 @@ func (m *SimpleMemory) GetLastUserMessage() (eino.Message, error) {
 	return eino.Message{}, errors.New("no user message found")
 }
 
-// GetLastAssistantMessage 获取最后一条助手消息
+// GetLastAssistantMessage 获取最后一条助手消�?
 func (m *SimpleMemory) GetLastAssistantMessage() (eino.Message, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	// 反向遍历消息查找最后一条助手消息
+	// 反向遍历消息查找最后一条助手消�?
 	for i := len(m.messages) - 1; i >= 0; i-- {
 		if m.messages[i].Role == eino.RoleAssistant {
 			return m.messages[i], nil

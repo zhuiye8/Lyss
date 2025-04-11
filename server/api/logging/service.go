@@ -7,18 +7,18 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourusername/agent-platform/server/models"
+	"github.com/zhuiye8/Lyss/server/models"
 	"gorm.io/gorm"
 )
 
 var (
-	ErrLogNotFound      = errors.New("日志记录不存在")
-	ErrInvalidLogType   = errors.New("无效的日志类型")
+	ErrLogNotFound      = errors.New("日志记录不存�?)
+	ErrInvalidLogType   = errors.New("无效的日志类�?)
 	ErrNoPermission     = errors.New("没有操作权限")
-	ErrInvalidLogFormat = errors.New("无效的日志格式")
+	ErrInvalidLogFormat = errors.New("无效的日志格�?)
 )
 
-// Service 提供日志查询和管理功能
+// Service 提供日志查询和管理功�?
 type Service struct {
 	db *gorm.DB
 }
@@ -53,7 +53,7 @@ type LogQueryParams struct {
 	SortOrder   string    `form:"sort_order"`
 }
 
-// LogType 表示查询的日志类型
+// LogType 表示查询的日志类�?
 type LogType string
 
 const (
@@ -68,7 +68,7 @@ func (s *Service) GetLogs(params LogQueryParams, logType LogType) ([]models.LogR
 	var responses []models.LogResponse
 	var totalCount int64
 	
-	// 构建查询，根据日志类型选择表
+	// 构建查询，根据日志类型选择�?
 	var query *gorm.DB
 	switch logType {
 	case LogTypeAPI:
@@ -107,7 +107,7 @@ func (s *Service) GetLogs(params LogQueryParams, logType LogType) ([]models.LogR
 		}
 	}
 	
-	// 添加特定日志类型的过滤条件
+	// 添加特定日志类型的过滤条�?
 	if logType == LogTypeAPI || logType == LogTypeAll {
 		if params.RequestID != "" {
 			query = query.Where("request_id = ?", params.RequestID)
@@ -186,7 +186,7 @@ func (s *Service) GetLogs(params LogQueryParams, logType LogType) ([]models.LogR
 		params.SortOrder = "desc"
 	}
 	
-	// 添加排序和分页
+	// 添加排序和分�?
 	query = query.Order(fmt.Sprintf("%s %s", params.SortBy, params.SortOrder))
 	query = query.Offset(offset).Limit(params.PageSize)
 	
@@ -198,7 +198,7 @@ func (s *Service) GetLogs(params LogQueryParams, logType LogType) ([]models.LogR
 			return nil, 0, err
 		}
 		
-		// 转换为响应格式
+		// 转换为响应格�?
 		responses = make([]models.LogResponse, len(logs))
 		for i, log := range logs {
 			var metadata interface{}
@@ -230,7 +230,7 @@ func (s *Service) GetLogs(params LogQueryParams, logType LogType) ([]models.LogR
 			return nil, 0, err
 		}
 		
-		// 转换为响应格式
+		// 转换为响应格�?
 		responses = make([]models.LogResponse, len(logs))
 		for i, log := range logs {
 			var metadata interface{}
@@ -260,7 +260,7 @@ func (s *Service) GetLogs(params LogQueryParams, logType LogType) ([]models.LogR
 			return nil, 0, err
 		}
 		
-		// 转换为响应格式
+		// 转换为响应格�?
 		responses = make([]models.LogResponse, len(logs))
 		for i, log := range logs {
 			var metadata interface{}
@@ -291,7 +291,7 @@ func (s *Service) GetLogs(params LogQueryParams, logType LogType) ([]models.LogR
 			return nil, 0, err
 		}
 		
-		// 转换为响应格式
+		// 转换为响应格�?
 		responses = make([]models.LogResponse, len(logs))
 		for i, log := range logs {
 			var metadata interface{}
@@ -328,7 +328,7 @@ func (s *Service) GetLogByID(id uuid.UUID) (*models.LogResponse, error) {
 		return nil, err
 	}
 	
-	// 解析元数据
+	// 解析元数�?
 	var metadata interface{}
 	if baseLog.Metadata != "" {
 		if err := json.Unmarshal([]byte(baseLog.Metadata), &metadata); err == nil {
@@ -374,7 +374,7 @@ func (s *Service) GetLogByID(id uuid.UUID) (*models.LogResponse, error) {
 	return response, nil
 }
 
-// MarkErrorAsResolved 将错误日志标记为已解决
+// MarkErrorAsResolved 将错误日志标记为已解�?
 func (s *Service) MarkErrorAsResolved(id uuid.UUID, userID uuid.UUID) error {
 	var errorLog models.ErrorLog
 	if err := s.db.Where("id = ?", id).First(&errorLog).Error; err != nil {
@@ -395,7 +395,7 @@ func (s *Service) MarkErrorAsResolved(id uuid.UUID, userID uuid.UUID) error {
 	return nil
 }
 
-// AddSystemLog 添加一条系统日志
+// AddSystemLog 添加一条系统日�?
 func (s *Service) AddSystemLog(level models.LogLevel, message string, metadata map[string]interface{}) error {
 	metadataJSON, err := json.Marshal(metadata)
 	if err != nil {
@@ -430,7 +430,7 @@ func (s *Service) GetLogStats(startTime, endTime time.Time) (map[string]interfac
 		startTime = endTime.Add(-24 * time.Hour)
 	}
 	
-	// 各级别日志数量
+	// 各级别日志数�?
 	var levelCounts []struct {
 		Level string `json:"level"`
 		Count int64  `json:"count"`
@@ -444,7 +444,7 @@ func (s *Service) GetLogStats(startTime, endTime time.Time) (map[string]interfac
 	}
 	stats["level_counts"] = levelCounts
 	
-	// 各类别日志数量
+	// 各类别日志数�?
 	var categoryCounts []struct {
 		Category string `json:"category"`
 		Count    int64  `json:"count"`

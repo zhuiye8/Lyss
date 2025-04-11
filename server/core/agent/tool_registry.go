@@ -190,7 +190,7 @@ func (r *ToolRegistry) RegisterWebSearchTool(searchFunc func(ctx context.Context
 		Parameters: map[string]interface{}{
 			"query": map[string]interface{}{
 				"type":        "string",
-				"description": "搜索查询词",
+				"description": "搜索查询",
 			},
 		},
 		Handler: func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
@@ -205,7 +205,7 @@ func (r *ToolRegistry) RegisterWebSearchTool(searchFunc func(ctx context.Context
 	return r.RegisterTool(searchTool)
 }
 
-// RegisterCalculatorTool 注册计算器工具
+// RegisterCalculatorTool 注册计算器工�?
 func (r *ToolRegistry) RegisterCalculatorTool() error {
 	calculatorTool := Tool{
 		Name:        "calculator",
@@ -216,19 +216,19 @@ func (r *ToolRegistry) RegisterCalculatorTool() error {
 		Parameters: map[string]interface{}{
 			"expression": map[string]interface{}{
 				"type":        "string",
-				"description": "要计算的数学表达式",
+				"description": "要计算的数学表达�?,
 			},
 		},
 		Handler: func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
 			// 在实际实现中，这里会解析和计算表达式
-			// 简化版本，仅返回示例
+			// 简化版本，仅返回示�?
 			expr, ok := params["expression"].(string)
 			if !ok {
 				return nil, errors.New("expression parameter must be a string")
 			}
 			return map[string]interface{}{
 				"expression": expr,
-				"result":     "计算结果示例", // 实际实现会计算真实结果
+				"result":     "计算结果示例", // 实际实现会计算真实结�?
 			}, nil
 		},
 	}
@@ -240,7 +240,7 @@ func (r *ToolRegistry) RegisterCalculatorTool() error {
 func (r *ToolRegistry) RegisterWeatherTool() error {
 	weatherTool := Tool{
 		Name:        "weather",
-		Description: "获取指定城市的天气信息",
+		Description: "获取指定城市的天气信�?,
 		Category:    CategoryUtility,
 		IsBuiltin:   true,
 		Version:     "1.0",
@@ -251,7 +251,7 @@ func (r *ToolRegistry) RegisterWeatherTool() error {
 			},
 			"country": map[string]interface{}{
 				"type":        "string",
-				"description": "国家名称，可选",
+				"description": "国家名称，可�?,
 				"required":    false,
 			},
 		},
@@ -262,13 +262,13 @@ func (r *ToolRegistry) RegisterWeatherTool() error {
 			}
 
 			// 在实际实现中，这里会调用天气API
-			// 这里仅提供模拟数据
+			// 这里仅提供模拟数�?
 			weather := map[string]interface{}{
 				"city":        city,
 				"temperature": 25,
 				"condition":   "晴朗",
 				"humidity":    60,
-				"wind":        "东北风3级",
+				"wind":        "东北�?�?,
 				"updated_at":  time.Now().Format(time.RFC3339),
 			}
 
@@ -283,7 +283,7 @@ func (r *ToolRegistry) RegisterWeatherTool() error {
 func (r *ToolRegistry) RegisterTimezoneTool() error {
 	timezoneTool := Tool{
 		Name:        "timezone_converter",
-		Description: "转换不同时区的时间",
+		Description: "转换不同时区的时�?,
 		Category:    CategoryUtility,
 		IsBuiltin:   true,
 		Version:     "1.0",
@@ -294,11 +294,11 @@ func (r *ToolRegistry) RegisterTimezoneTool() error {
 			},
 			"from_timezone": map[string]interface{}{
 				"type":        "string",
-				"description": "源时区，如'Asia/Shanghai'或'UTC+8'",
+				"description": "源时区，�?Asia/Shanghai'�?UTC+8'",
 			},
 			"to_timezone": map[string]interface{}{
 				"type":        "string",
-				"description": "目标时区，如'America/New_York'或'UTC-5'",
+				"description": "目标时区，如'America/New_York'�?UTC-5'",
 			},
 		},
 		Handler: func(ctx context.Context, params map[string]interface{}) (interface{}, error) {
@@ -319,7 +319,7 @@ func (r *ToolRegistry) RegisterTimezoneTool() error {
 			}
 			
 			// 在实际实现中，这里会解析时间和时区并进行转换
-			// 这里仅提供模拟数据
+			// 这里仅提供模拟数�?
 			result := map[string]interface{}{
 				"original_time": timeStr,
 				"from_timezone": fromTz,
@@ -334,7 +334,7 @@ func (r *ToolRegistry) RegisterTimezoneTool() error {
 	return r.RegisterTool(timezoneTool)
 }
 
-// RegisterKnowledgeSearchTool 注册知识库搜索工具
+// RegisterKnowledgeSearchTool 注册知识库搜索工�?
 func (r *ToolRegistry) RegisterKnowledgeSearchTool(searchFunc func(ctx context.Context, query string, filters map[string]interface{}) ([]map[string]interface{}, error)) error {
 	knowledgeTool := Tool{
 		Name:        "knowledge_search",
@@ -345,7 +345,7 @@ func (r *ToolRegistry) RegisterKnowledgeSearchTool(searchFunc func(ctx context.C
 		Parameters: map[string]interface{}{
 			"query": map[string]interface{}{
 				"type":        "string",
-				"description": "搜索查询词",
+				"description": "搜索查询�?,
 			},
 			"filters": map[string]interface{}{
 				"type":        "object",
@@ -388,18 +388,18 @@ func (r *ToolRegistry) RegisterHttpRequestTool() error {
 			},
 			"method": map[string]interface{}{
 				"type":        "string",
-				"description": "HTTP方法，如GET、POST等",
+				"description": "HTTP方法，如GET、POST�?,
 				"enum":        []string{"GET", "POST", "PUT", "DELETE", "PATCH", "HEAD"},
 				"default":     "GET",
 			},
 			"headers": map[string]interface{}{
 				"type":        "object",
-				"description": "请求头",
+				"description": "请求�?,
 				"required":    false,
 			},
 			"body": map[string]interface{}{
 				"type":        "string",
-				"description": "请求体，用于POST、PUT等方法",
+				"description": "请求体，用于POST、PUT等方�?,
 				"required":    false,
 			},
 		},
@@ -420,7 +420,7 @@ func (r *ToolRegistry) RegisterHttpRequestTool() error {
 				return nil, err
 			}
 			
-			// 添加请求头
+			// 添加请求�?
 			if headersParam, ok := params["headers"].(map[string]interface{}); ok {
 				for key, value := range headersParam {
 					if strValue, ok := value.(string); ok {
@@ -429,10 +429,10 @@ func (r *ToolRegistry) RegisterHttpRequestTool() error {
 				}
 			}
 			
-			// 设置请求体
+			// 设置请求�?
 			if bodyParam, ok := params["body"].(string); ok && method != "GET" && method != "HEAD" {
 				req.Body = http.NoBody
-				// 实际实现应该设置请求体
+				// 实际实现应该设置请求�?
 			}
 			
 			// 执行请求
@@ -459,7 +459,7 @@ func (r *ToolRegistry) RegisterHttpRequestTool() error {
 func (r *ToolRegistry) RegisterFileReadTool(basePath string) error {
 	fileTool := Tool{
 		Name:        "file_read",
-		Description: "读取指定路径的文件内容",
+		Description: "读取指定路径的文件内�?,
 		Category:    CategoryDeveloper,
 		IsBuiltin:   true,
 		Version:     "1.0",
@@ -475,13 +475,13 @@ func (r *ToolRegistry) RegisterFileReadTool(basePath string) error {
 				return nil, errors.New("path parameter must be a non-empty string")
 			}
 			
-			// 安全检查：确保路径在允许的基础路径内
+			// 安全检查：确保路径在允许的基础路径�?
 			fullPath := filepath.Join(basePath, path)
 			if !isPathSafe(fullPath, basePath) {
 				return nil, errors.New("access denied: path is outside the allowed directory")
 			}
 			
-			// 检查文件是否存在
+			// 检查文件是否存�?
 			if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 				return nil, errors.New("file not found")
 			}
@@ -502,7 +502,7 @@ func (r *ToolRegistry) RegisterFileReadTool(basePath string) error {
 	return r.RegisterTool(fileTool)
 }
 
-// isPathSafe 检查给定路径是否在允许的基础路径内
+// isPathSafe 检查给定路径是否在允许的基础路径�?
 func isPathSafe(path, basePath string) bool {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
@@ -515,7 +515,7 @@ func isPathSafe(path, basePath string) bool {
 	return filepath.HasPrefix(absPath, absBasePath)
 }
 
-// RegisterCustomTool 注册自定义工具
+// RegisterCustomTool 注册自定义工�?
 func (r *ToolRegistry) RegisterCustomTool(name, description string, parameters map[string]interface{}, handler ToolHandler, category ToolCategory) error {
 	if category == "" {
 		category = CategoryCustom
@@ -560,7 +560,7 @@ func (r *ToolRegistry) RegisterBatchTools(toolNames []string) error {
 	return nil
 }
 
-// RegisterAllBuiltinTools 注册所有内置工具
+// RegisterAllBuiltinTools 注册所有内置工�?
 func (r *ToolRegistry) RegisterAllBuiltinTools() error {
 	// 注册基本工具
 	if err := r.RegisterCalculatorTool(); err != nil {

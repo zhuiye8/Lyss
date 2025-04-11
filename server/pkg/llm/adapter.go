@@ -6,17 +6,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourusername/agent-platform/server/models"
+	"github.com/zhuiye8/Lyss/server/models"
 )
 
 var (
-	ErrInvalidProvider = errors.New("无效的模型提供者")
-	ErrConfigRequired  = errors.New("需要提供模型配置")
+	ErrInvalidProvider = errors.New("无效的模型提供�?)
+	ErrConfigRequired  = errors.New("需要提供模型配�?)
 	ErrAPIKeyRequired  = errors.New("需要提供API密钥")
 	ErrAPIError        = errors.New("API调用失败")
 )
 
-// Adapter LLM适配器接口
+// Adapter LLM适配器接�?
 type Adapter interface {
 	// Chat 执行对话请求
 	Chat(ctx context.Context, request ChatRequest) (*ChatResponse, error)
@@ -28,24 +28,24 @@ type Adapter interface {
 	TestConnection(ctx context.Context) error
 }
 
-// Manager 模型管理器
+// Manager 模型管理�?
 type Manager struct {
 	adapters map[models.ModelProvider]Adapter
 }
 
-// NewManager 创建模型管理器
+// NewManager 创建模型管理�?
 func NewManager() *Manager {
 	return &Manager{
 		adapters: make(map[models.ModelProvider]Adapter),
 	}
 }
 
-// RegisterAdapter 注册适配器
+// RegisterAdapter 注册适配�?
 func (m *Manager) RegisterAdapter(provider models.ModelProvider, adapter Adapter) {
 	m.adapters[provider] = adapter
 }
 
-// GetAdapter 获取适配器
+// GetAdapter 获取适配�?
 func (m *Manager) GetAdapter(config models.ModelConfig) (Adapter, error) {
 	provider := config.Model.Provider
 	
@@ -57,18 +57,18 @@ func (m *Manager) GetAdapter(config models.ModelConfig) (Adapter, error) {
 	return adapter, nil
 }
 
-// Message 表示对话中的一条消息
+// Message 表示对话中的一条消�?
 type Message struct {
 	Role     string `json:"role"`      // system, user, assistant
 	Content  string `json:"content"`   // 消息内容
-	Name     string `json:"name,omitempty"` // 可选名称
+	Name     string `json:"name,omitempty"` // 可选名�?
 	FuncCall *struct {
-		Name      string `json:"name"`      // 函数名
+		Name      string `json:"name"`      // 函数�?
 		Arguments string `json:"arguments"` // 函数参数 (JSON格式)
 	} `json:"function_call,omitempty"`
 }
 
-// FunctionDefinition 表示可以调用的函数定义
+// FunctionDefinition 表示可以调用的函数定�?
 type FunctionDefinition struct {
 	Name        string `json:"name"`        // 函数名称
 	Description string `json:"description"` // 函数描述
@@ -80,7 +80,7 @@ type ChatRequest struct {
 	ConfigID   uuid.UUID            // 使用的模型配置ID
 	Messages   []Message            // 对话历史
 	Functions  []FunctionDefinition // 可用函数定义
-	MaxTokens  int                  // 生成的最大token数
+	MaxTokens  int                  // 生成的最大token�?
 	Temperature float32             // 温度参数
 	Stream     bool                 // 是否使用流式响应
 }
@@ -89,10 +89,10 @@ type ChatRequest struct {
 type ChatResponse struct {
 	ID               string   `json:"id"`               // 响应ID
 	Message          Message  `json:"message"`          // 响应消息
-	PromptTokens     int      `json:"prompt_tokens"`    // 提示使用的token数
-	CompletionTokens int      `json:"completion_tokens"`// 生成使用的token数
-	TotalTokens      int      `json:"total_tokens"`     // 总token数
-	Model            string   `json:"model"`            // 使用的模型
+	PromptTokens     int      `json:"prompt_tokens"`    // 提示使用的token�?
+	CompletionTokens int      `json:"completion_tokens"`// 生成使用的token�?
+	TotalTokens      int      `json:"total_tokens"`     // 总token�?
+	Model            string   `json:"model"`            // 使用的模�?
 	FinishReason     string   `json:"finish_reason"`    // 结束原因 (stop, length, function_call)
 	Latency          time.Duration `json:"latency"`     // 延迟时间
 	Cost             float64  `json:"cost"`             // 费用
@@ -115,13 +115,13 @@ type EmbeddingVector struct {
 // EmbeddingResponse 嵌入响应
 type EmbeddingResponse struct {
 	Embeddings []EmbeddingVector `json:"embeddings"` // 嵌入向量列表
-	Model      string            `json:"model"`      // 使用的模型
-	TokenCount int               `json:"token_count"`// 使用的token数
+	Model      string            `json:"model"`      // 使用的模�?
+	TokenCount int               `json:"token_count"`// 使用的token�?
 	Latency    time.Duration     `json:"latency"`    // 延迟时间
 	Cost       float64           `json:"cost"`       // 费用
 }
 
-// CreateAdapter 根据提供者创建适配器
+// CreateAdapter 根据提供者创建适配�?
 func CreateAdapter(provider models.ModelProvider, config models.ModelProviderConfig) (Adapter, error) {
 	switch provider {
 	case models.ModelProviderOpenAI:
@@ -141,17 +141,17 @@ func CreateAdapter(provider models.ModelProvider, config models.ModelProviderCon
 	}
 }
 
-// GetChatCompletionCost 计算对话完成的费用
+// GetChatCompletionCost 计算对话完成的费�?
 func GetChatCompletionCost(model *models.Model, promptTokens, completionTokens int) float64 {
-	// 计算提示和完成部分费用
+	// 计算提示和完成部分费�?
 	promptCost := float64(promptTokens) * model.TokenCostPrompt
 	completionCost := float64(completionTokens) * model.TokenCostCompl
 	
-	// 总费用
+	// 总费�?
 	return promptCost + completionCost
 }
 
-// GetEmbeddingCost 计算嵌入的费用
+// GetEmbeddingCost 计算嵌入的费�?
 func GetEmbeddingCost(model *models.Model, tokenCount int) float64 {
 	// 嵌入只收取输入token费用
 	return float64(tokenCount) * model.TokenCostPrompt

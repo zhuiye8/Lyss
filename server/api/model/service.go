@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/yourusername/agent-platform/server/models"
-	"github.com/yourusername/agent-platform/server/pkg/encryption"
+	"github.com/zhuiye8/Lyss/server/models"
+	"github.com/zhuiye8/Lyss/server/pkg/encryption"
 	"gorm.io/gorm"
 )
 
@@ -15,7 +15,7 @@ var (
 	ErrModelNotFound      = errors.New("模型不存在")
 	ErrModelConfigNotFound = errors.New("模型配置不存在")
 	ErrDuplicateModelName = errors.New("模型名称已存在")
-	ErrInvalidProvider    = errors.New("无效的模型提供者")
+	ErrInvalidProvider    = errors.New("无效的模型提供商")
 	ErrNoPermission       = errors.New("没有操作权限")
 )
 
@@ -35,7 +35,7 @@ func NewService(db *gorm.DB, encryptor *encryption.Service) *Service {
 
 // GetModels 获取模型列表
 func (s *Service) GetModels(params ModelsQueryParams) ([]models.Model, int64, error) {
-	var models []models.Model
+	var modelList []models.Model
 	var totalCount int64
 	
 	query := s.db.Model(&models.Model{})
@@ -91,11 +91,11 @@ func (s *Service) GetModels(params ModelsQueryParams) ([]models.Model, int64, er
 	}
 	
 	// 执行查询
-	if err := query.Find(&models).Error; err != nil {
+	if err := query.Find(&modelList).Error; err != nil {
 		return nil, 0, err
 	}
 	
-	return models, totalCount, nil
+	return modelList, totalCount, nil
 }
 
 // GetModelByID 通过ID获取模型
@@ -173,10 +173,9 @@ func (s *Service) UpdateModel(id uuid.UUID, updateData *models.Model) error {
 		"updated_at":       time.Now(),
 	}
 	
-	// 如果提供了能力数据
+	// 如果提供了能力数组
 	if len(updateData.Capabilities) > 0 {
-		updateData.BeforeSave()
-		updateMap["capabilities"] = updateData.CapabilitiesStr
+		updateMap["capabilities"] = updateData.Capabilities
 	}
 	
 	// 加密并更新提供者配置
@@ -202,7 +201,7 @@ func (s *Service) DeleteModel(id uuid.UUID) error {
 		return err
 	}
 	
-	// 检查权限 - 系统模型不能删除
+	// 检查权限- 系统模型不能删除
 	if model.IsSystem {
 		return ErrNoPermission
 	}
@@ -457,7 +456,7 @@ func (s *Service) UpdateModelUsageMetrics(configID uuid.UUID, success bool, toke
 		return err
 	}
 	
-	// 更新数据库
+	// 更新数据
 	return s.db.Model(&models.ModelConfig{}).Where("id = ?", configID).
 		Update("usage_metrics", config.UsageMetricsStr).Error
 }

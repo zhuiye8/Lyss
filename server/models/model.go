@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // ModelProvider 表示模型提供者类型
@@ -148,7 +149,10 @@ func (p *ModelParameters) Scan(value interface{}) error {
 
 // Value 实现 driver.Valuer 接口
 func (p ModelParameters) Value() (driver.Value, error) {
-	if p == (ModelParameters{}) {
+	// 检查结构体是否为零值
+	if p.Temperature == nil && p.TopP == nil && p.TopK == nil && 
+	   p.MaxTokens == nil && p.PresencePenalty == nil && 
+	   p.FrequencyPenalty == nil && len(p.Stop) == 0 {
 		return nil, nil
 	}
 	return json.Marshal(p)
@@ -176,7 +180,7 @@ type ModelProviderConfig struct {
 	Deployment string `json:"deployment,omitempty"`   // 部署ID(如Azure OpenAI)
 	Region     string `json:"region,omitempty"`       // 区域设置
 	ProxyURL   string `json:"proxy_url,omitempty"`    // 代理地址
-	Extra      string `json:"extra,omitempty"`        // 其他配置项(JSON)
+	Extra      string `json:"extra,omitempty"`        // 其他配置(JSON)
 }
 
 // Scan 实现 sql.Scanner 接口
@@ -206,52 +210,31 @@ func (c ModelProviderConfig) Value() (driver.Value, error) {
 
 // Model 表示模型实体
 type Model struct {
-	ID              uuid.UUID           `json:"id" gorm:"type:uuid;primary_key;"`
-	Name            string              `json:"name" gorm:"size:128;not null;"`
-	Provider        ModelProvider       `json:"provider" gorm:"size:32;not null;"`
-	ModelID         string              `json:"model_id" gorm:"size:64;not null;"` // 提供者的模型ID
-	Type            ModelType           `json:"type" gorm:"size:32;not null;"`
-	Description     string              `json:"description" gorm:"type:text;"`
-	Capabilities    []string            `json:"capabilities" gorm:"-"`
-	CapabilitiesStr string              `json:"-" gorm:"column:capabilities;type:text;"`
-	Parameters      ModelParameters     `json:"parameters" gorm:"type:jsonb;default:'{}'::jsonb;"`
-	MaxTokens       int                 `json:"max_tokens" gorm:"default:0;"`
-	TokenCostPrompt float64             `json:"token_cost_prompt" gorm:"default:0;"`
-	TokenCostCompl  float64             `json:"token_cost_completion" gorm:"default:0;"`
-	Status          ModelStatus         `json:"status" gorm:"size:16;not null;default:'active';"`
-	ProviderConfig  ModelProviderConfig `json:"provider_config" gorm:"type:jsonb;default:'{}'::jsonb;"`
-	IsSystem        bool                `json:"is_system" gorm:"default:false;"`
-	IsCustom        bool                `json:"is_custom" gorm:"default:false;"`
-	OrganizationID  *uuid.UUID          `json:"organization_id" gorm:"type:uuid;"`
-	CreatedBy       *uuid.UUID          `json:"created_by" gorm:"type:uuid;"`
-	CreatedAt       time.Time           `json:"created_at" gorm:"type:timestamp with time zone;not null;default:CURRENT_TIMESTAMP;"`
-	UpdatedAt       time.Time           `json:"updated_at" gorm:"type:timestamp with time zone;not null;default:CURRENT_TIMESTAMP;"`
+	ID              uuid.UUID         `gorm:"type:uuid;primary_key" json:"id"`
+	Name            string            `gorm:"type:varchar(100);not null;unique" json:"name"`
+	Provider        ModelProvider     `gorm:"type:varchar(50);not null" json:"provider"`
+	ModelID         string            `gorm:"type:varchar(100);not null" json:"model_id"`
+	Type            ModelType         `gorm:"type:varchar(20);not null" json:"type"`
+	Description     string            `gorm:"type:text" json:"description"`
+	Capabilities    []string          `gorm:"type:text[]" json:"capabilities"`
+	Parameters      ModelParameters   `gorm:"type:jsonb" json:"parameters"`
+	MaxTokens       int               `gorm:"not null" json:"max_tokens"`
+	TokenCostPrompt float64           `gorm:"not null" json:"token_cost_prompt"`
+	TokenCostCompl   float64           `gorm:"not null" json:"token_cost_completion"`
+	Status          ModelStatus       `gorm:"type:varchar(20);not null;default:'active'" json:"status"`
+	ProviderConfig  ModelProviderConfig `gorm:"type:jsonb" json:"provider_config"`
+	IsSystem        bool              `gorm:"not null;default:false" json:"is_system"`
+	IsCustom        bool              `gorm:"not null;default:false" json:"is_custom"`
+	OrganizationID  *uuid.UUID        `gorm:"type:uuid" json:"organization_id,omitempty"`
+	CreatedBy       *uuid.UUID        `gorm:"type:uuid" json:"created_by,omitempty"`
+	CreatedAt       time.Time         `json:"created_at"`
+	UpdatedAt       time.Time         `json:"updated_at"`
+	DeletedAt       gorm.DeletedAt    `gorm:"index" json:"-"`
 }
 
-// BeforeSave GORM钩子，保存前处理
-func (m *Model) BeforeSave() error {
-	if m.ID == uuid.Nil {
-		m.ID = uuid.New()
-	}
-	
-	// 将能力列表转为逗号分隔的字符串
-	if len(m.Capabilities) > 0 {
-		bytes, err := json.Marshal(m.Capabilities)
-		if err != nil {
-			return err
-		}
-		m.CapabilitiesStr = string(bytes)
-	}
-	
-	return nil
-}
-
-// AfterFind GORM钩子，查询后处理
-func (m *Model) AfterFind() error {
-	// 将逗号分隔的字符串转为能力列表
-	if m.CapabilitiesStr != "" {
-		return json.Unmarshal([]byte(m.CapabilitiesStr), &m.Capabilities)
-	}
+// BeforeCreate 在创建模型前生成UUID
+func (m *Model) BeforeCreate(tx *gorm.DB) error {
+	m.ID = uuid.New()
 	return nil
 }
 
@@ -320,8 +303,8 @@ type ModelResponse struct {
 	CreatedAt   time.Time     `json:"created_at"`
 }
 
-// ConfigResponse 模型配置API响应
-type ConfigResponse struct {
+// ModelConfigResponse 是返回给客户端的模型配置结构
+type ModelConfigResponse struct {
 	ID             uuid.UUID      `json:"id"`
 	Name           string         `json:"name"`
 	Description    string         `json:"description"`

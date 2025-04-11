@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/yourusername/agent-platform/server/pkg/auth"
+	"github.com/zhuiye8/Lyss/server/pkg/auth"
 )
 
 // Handler 处理日志相关的API请求
@@ -15,7 +15,7 @@ type Handler struct {
 	service *Service
 }
 
-// NewHandler 创建新的日志处理器
+// NewHandler 创建新的日志处理�?
 func NewHandler(service *Service) *Handler {
 	return &Handler{
 		service: service,
@@ -26,7 +26,7 @@ func NewHandler(service *Service) *Handler {
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	logGroup := router.Group("/logs")
 	{
-		// 查询日志列表 - 根据查询条件筛选
+		// 查询日志列表 - 根据查询条件筛�?
 		logGroup.GET("", auth.RequireAuth(), h.GetLogs)
 		
 		// 获取特定日志详情
@@ -47,7 +47,7 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 func (h *Handler) GetLogs(c *gin.Context) {
 	var params LogQueryParams
 	if err := c.ShouldBindQuery(&params); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的查询参数"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的查询参�?})
 		return
 	}
 	
@@ -64,7 +64,7 @@ func (h *Handler) GetLogs(c *gin.Context) {
 	case "all":
 		logType = LogTypeAll
 	default:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的日志类型"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的日志类�?})
 		return
 	}
 	
@@ -73,12 +73,12 @@ func (h *Handler) GetLogs(c *gin.Context) {
 	
 	// 管理员可以查询所有日志，普通用户只能查询自己的
 	if !auth.IsAdmin(c) && params.UserID != "" && params.UserID != userID.String() {
-		c.JSON(http.StatusForbidden, gin.H{"error": "没有权限查询其他用户的日志"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "没有权限查询其他用户的日�?})
 		return
 	}
 	
 	if params.UserID == "" && !auth.IsAdmin(c) {
-		// 非管理员只能查看自己的日志
+		// 非管理员只能查看自己的日�?
 		params.UserID = userID.String()
 	}
 	
@@ -102,7 +102,7 @@ func (h *Handler) GetLogs(c *gin.Context) {
 	})
 }
 
-// GetLogByID 获取特定日志的详细信息
+// GetLogByID 获取特定日志的详细信�?
 func (h *Handler) GetLogByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -114,7 +114,7 @@ func (h *Handler) GetLogByID(c *gin.Context) {
 	log, err := h.service.GetLogByID(id)
 	if err != nil {
 		if err == ErrLogNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "日志不存在"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "日志不存�?})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "获取日志失败"})
 		}
@@ -124,7 +124,7 @@ func (h *Handler) GetLogByID(c *gin.Context) {
 	// 检查权限：管理员可以查看所有日志，普通用户只能查看自己的
 	userID := auth.GetUserIDFromContext(c)
 	if !auth.IsAdmin(c) && log.UserID != nil && *log.UserID != userID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "没有权限查看此日志"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "没有权限查看此日�?})
 		return
 	}
 	
@@ -143,7 +143,7 @@ func (h *Handler) MarkErrorAsResolved(c *gin.Context) {
 	// 获取当前用户
 	userID := auth.GetUserIDFromContext(c)
 	
-	// 只有管理员可以标记错误为已解决
+	// 只有管理员可以标记错误为已解�?
 	if !auth.IsAdmin(c) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "没有操作权限"})
 		return
@@ -152,7 +152,7 @@ func (h *Handler) MarkErrorAsResolved(c *gin.Context) {
 	err = h.service.MarkErrorAsResolved(id, userID)
 	if err != nil {
 		if err == ErrLogNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "日志不存在"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "日志不存�?})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "操作失败"})
 		}
@@ -174,7 +174,7 @@ func (h *Handler) GetLogStats(c *gin.Context) {
 	if startTimeStr != "" {
 		startTime, err = time.Parse(time.RFC3339, startTimeStr)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "无效的开始时间格式"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "无效的开始时间格�?})
 			return
 		}
 	}
@@ -182,19 +182,19 @@ func (h *Handler) GetLogStats(c *gin.Context) {
 	if endTimeStr != "" {
 		endTime, err = time.Parse(time.RFC3339, endTimeStr)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "无效的结束时间格式"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "无效的结束时间格�?})
 			return
 		}
 	} else {
 		endTime = time.Now()
 	}
 	
-	// 默认查询最近24小时
+	// 默认查询最�?4小时
 	if startTime.IsZero() {
 		startTime = endTime.Add(-24 * time.Hour)
 	}
 	
-	// 只有管理员可以查看统计信息
+	// 只有管理员可以查看统计信�?
 	if !auth.IsAdmin(c) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "没有权限查看统计信息"})
 		return
@@ -237,11 +237,11 @@ func (h *Handler) GetMetrics(c *gin.Context) {
 	case "7d":
 		duration = 7 * 24 * time.Hour
 	default:
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的时间范围"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的时间范�?})
 		return
 	}
 	
-	// 只有管理员可以查看监控数据
+	// 只有管理员可以查看监控数�?
 	if !auth.IsAdmin(c) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "没有权限查看监控数据"})
 		return

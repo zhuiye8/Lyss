@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/yourusername/agent-platform/server/models"
-	"github.com/yourusername/agent-platform/server/pkg/middleware"
+	"github.com/zhuiye8/Lyss/server/models"
+	"github.com/zhuiye8/Lyss/server/pkg/middleware"
 )
 
 // Handler 处理配置相关的HTTP请求
@@ -195,7 +195,6 @@ func (h *Handler) GetAllConfigs(c *gin.Context) {
 	scope := c.Query("scope")
 	
 	var configs []interface{}
-	var err error
 	
 	if scope == "" {
 		// 获取所有配置
@@ -222,10 +221,16 @@ func (h *Handler) GetAllConfigs(c *gin.Context) {
 		}
 	} else {
 		// 获取指定作用域的配置
-		configs, err = h.service.GetConfigsByScope(scope, nil)
+		configResponses, err := h.service.GetConfigsByScope(scope, nil)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "获取配置失败"})
 			return
+		}
+		
+		// 转换为interface{}类型
+		configs = make([]interface{}, len(configResponses))
+		for i, config := range configResponses {
+			configs[i] = config
 		}
 	}
 	

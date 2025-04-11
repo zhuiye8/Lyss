@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/yourusername/agent-platform/server/models"
-	"github.com/yourusername/agent-platform/server/pkg/middleware"
+	"github.com/zhuiye8/Lyss/server/models"
+	"github.com/zhuiye8/Lyss/server/pkg/middleware"
 	"go.uber.org/zap"
 )
 
@@ -386,13 +386,13 @@ func (h *Handler) TestAgent(c *gin.Context) {
 		return
 	}
 
-	// TODO: 当Agent运行时实现后，这里会调用Agent运行时
+	// TODO: 当Agent运行时实现后，这里会调用Agent运行
 	// 现在先返回一个模拟响应
 	mockResponse := map[string]interface{}{
 		"id":        uuid.New().String(),
 		"agent_id":  agent.ID,
 		"query":     req.Message,
-		"response":  "这是一个模拟的智能体测试响应。实际功能将在Agent运行时实现后完成。",
+		"response":  "这是一个模拟的智能体测试响应。实际功能将在Agent运行时实现后完成",
 		"timestamp": c.Request.Context(),
 	}
 

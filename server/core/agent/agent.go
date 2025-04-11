@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
-	"github.com/bytedance/eino"
-	"github.com/bytedance/eino/provider"
+	"github.com/cloudwego/eino"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -156,28 +156,14 @@ func (a *Agent) InitEinoAgent(ctx context.Context, apiKey, baseURL string) error
 	})
 
 	// 创建模型提供者
-	var p provider.Provider
-
-	switch a.Provider {
-	case "openai":
-		p = provider.NewOpenAI(apiKey, baseURL)
-	case "anthropic":
-		p = provider.NewAnthropic(apiKey, baseURL)
-	case "baidu":
-		// 百度文心一言需要额外的AppID
-		appID := ""
-		if a.Config != nil {
-			if val, ok := a.Config["app_id"].(string); ok {
-				appID = val
-			}
-		}
-		p = NewBaiduProvider(apiKey, appID, baseURL)
-	case "aliyun":
-		// 阿里通义千问
-		p = NewAliyunProvider(apiKey, baseURL)
-	default:
-		return fmt.Errorf("unsupported provider: %s", a.Provider)
+	var options []eino.Option
+	
+	if baseURL != "" {
+		options = append(options, eino.WithBaseURL(baseURL))
 	}
+	
+	// 配置API密钥
+	options = append(options, eino.WithAPIKey(apiKey))
 
 	// 转换工具为Eino工具格式
 	tools := make([]eino.Tool, 0, len(a.Tools))
@@ -192,7 +178,7 @@ func (a *Agent) InitEinoAgent(ctx context.Context, apiKey, baseURL string) error
 	// 创建Eino Agent配置
 	agentConfig := eino.AgentConfig{
 		Model:    a.Model,
-		Provider: p,
+		Provider: a.Provider, // 使用字符串指定提供商类型
 		Tools:    tools,
 	}
 
@@ -205,9 +191,12 @@ func (a *Agent) InitEinoAgent(ctx context.Context, apiKey, baseURL string) error
 			agentConfig.MaxTokens = maxTokens
 		}
 	}
+	
+	// 添加配置选项
+	options = append(options, eino.WithAgentConfig(agentConfig))
 
 	// 创建Agent
-	einoAgent, err := eino.NewAgent(&agentConfig)
+	einoAgent, err := eino.NewAgent(options...)
 	if err != nil {
 		a.emitEvent(ctx, EventError, map[string]interface{}{
 			"error": err.Error(),

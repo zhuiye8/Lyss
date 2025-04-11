@@ -31,7 +31,7 @@ type Agent struct {
 // JSONMap 是JSON字段的辅助类型
 type JSONMap map[string]interface{}
 
-// AgentKnowledgeBase 智能体与知识库的多对多关系
+// AgentKnowledgeBase 智能体与知识库的多对多关联
 type AgentKnowledgeBase struct {
 	AgentID        uuid.UUID `gorm:"type:uuid;primaryKey" json:"agent_id"`
 	KnowledgeBaseID uuid.UUID `gorm:"type:uuid;primaryKey" json:"knowledge_base_id"`
