@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS api_logs;
+DROP TABLE IF EXISTS error_logs;
+DROP TABLE IF EXISTS model_call_logs;
+DROP TABLE IF EXISTS logs;
+DROP TABLE IF EXISTS system_metrics; 

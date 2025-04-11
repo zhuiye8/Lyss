@@ -10,23 +10,26 @@
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,less,scss}\"",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
-    "@ant-design/x": "^1.0.0",
+    "@ant-design/x": "1.1.0",
     "antd": "^5.12.0",
     "axios": "^1.6.0",
-    "lodash": "^4.17.21",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.18.0",
-    "zustand": "^4.4.6",
+    "dayjs": "^1.11.10",
     "immer": "^10.0.3",
-    "react-markdown": "^9.0.1",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "react-flow-renderer": "^10.3.17",
+    "react-json-view-lite": "0.23.1",
+    "react-markdown": "^9.0.1",
+    "react-router-dom": "^6.18.0",
     "recharts": "^2.9.3",
-    "dayjs": "^1.11.10"
+    "zustand": "^4.4.6"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.200",
@@ -41,9 +44,14 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "less": "^4.2.0",
+    "patch-package": "^8.0.0",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2",
     "vite": "^4.5.0",
     "vitest": "^0.34.6"
+  },
+  "resolutions": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
   }
 } 

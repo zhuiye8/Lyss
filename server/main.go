@@ -14,6 +14,21 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
+	"github.com/yourusername/agent-platform/server/api/agent"
+	"github.com/yourusername/agent-platform/server/api/application"
+	"github.com/yourusername/agent-platform/server/api/auth"
+	"github.com/yourusername/agent-platform/server/api/config"
+	"github.com/yourusername/agent-platform/server/api/conversation"
+	"github.com/yourusername/agent-platform/server/api/model"
+	"github.com/yourusername/agent-platform/server/api/project"
+	"github.com/yourusername/agent-platform/server/models"
+	authPkg "github.com/yourusername/agent-platform/server/pkg/auth"
+	"github.com/yourusername/agent-platform/server/pkg/encryption"
+	"github.com/yourusername/agent-platform/server/pkg/middleware"
 )
 
 func main() {
@@ -35,6 +50,75 @@ func main() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	// 初始化数据库
+	db, err := initDatabase()
+	if err != nil {
+		zap.L().Fatal("Failed to connect to database", zap.Error(err))
+	}
+
+	// 自动迁移模型（仅在开发环境中使用）
+	if viper.GetString("app.env") == "development" {
+		if err := db.AutoMigrate(
+			&models.User{}, 
+			&models.Project{}, 
+			&models.Application{}, 
+			&models.Config{}, 
+			&models.Model{}, 
+			&models.ModelConfig{},
+			&models.Agent{},
+			&models.AgentKnowledgeBase{},
+			&models.Conversation{},
+			&models.Message{},
+		); err != nil {
+			zap.L().Fatal("Failed to migrate database", zap.Error(err))
+		}
+	}
+
+	// 初始化JWT管理器
+	jwtManager := authPkg.NewJWTManager(authPkg.Config{
+		SecretKey:     viper.GetString("jwt.secret"),
+		TokenExpiry:   viper.GetDuration("jwt.expiry"),
+		RefreshExpiry: viper.GetDuration("jwt.refresh_expiry"),
+		Issuer:        viper.GetString("app.name"),
+	})
+
+	// 初始化加密服务
+	encryptionService, err := encryption.NewService(viper.GetString("encryption.secret"))
+	if err != nil {
+		zap.L().Fatal("Failed to initialize encryption service", zap.Error(err))
+	}
+
+	// 初始化认证中间件
+	authMiddleware := middleware.NewAuthMiddleware(jwtManager)
+
+	// 初始化认证服务
+	authService := auth.NewService(db, jwtManager)
+	authHandler := auth.NewHandler(authService, authMiddleware)
+
+	// 初始化项目服务
+	projectService := project.NewService(db)
+	projectHandler := project.NewHandler(projectService, authMiddleware)
+
+	// 初始化应用服务
+	applicationService := application.NewService(db)
+	applicationHandler := application.NewHandler(applicationService, authMiddleware)
+
+	// 初始化配置服务
+	configService := config.NewService(db)
+	configHandler := config.NewHandler(configService, authMiddleware)
+
+	// 初始化模型服务
+	modelService := model.NewService(db, encryptionService)
+	modelHandler := model.NewHandler(modelService)
+
+	// 初始化智能体服务
+	agentService := agent.NewService(db)
+	agentHandler := agent.NewHandler(agentService, authMiddleware)
+
+	// 初始化对话服务
+	conversationService := conversation.NewService(db)
+	conversationHandler := conversation.NewHandler(conversationService, authMiddleware)
+
 	// 创建路由
 	r := gin.Default()
 
@@ -55,6 +139,17 @@ func main() {
 				"version": viper.GetString("app.version"),
 			})
 		})
+
+		// 注册各种处理器路由
+		authHandler.RegisterRoutes(api)
+		projectHandler.RegisterRoutes(api)
+		applicationHandler.RegisterRoutes(api)
+		configHandler.RegisterRoutes(api)
+		modelHandler.RegisterRoutes(api)
+		
+		// 注册新增的处理器路由
+		agentHandler.RegisterRoutes(api)
+		conversationHandler.RegisterRoutes(api)
 	}
 
 	// 启动服务器
@@ -103,6 +198,10 @@ func loadConfig() {
 	viper.SetDefault("app.version", "0.1.0")
 	viper.SetDefault("app.env", "development")
 	viper.SetDefault("app.port", "8080")
+	viper.SetDefault("jwt.expiry", "24h")
+	viper.SetDefault("jwt.refresh_expiry", "168h") // 7天
+	viper.SetDefault("jwt.secret", "your-secret-key-change-me")
+	viper.SetDefault("encryption.secret", "your-encryption-key-must-be-32-chars")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -111,4 +210,31 @@ func loadConfig() {
 			log.Fatalf("Error reading config file: %s", err)
 		}
 	}
+}
+
+func initDatabase() (*gorm.DB, error) {
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
+		viper.GetString("database.host"),
+		viper.GetString("database.user"),
+		viper.GetString("database.password"),
+		viper.GetString("database.name"),
+		viper.GetString("database.port"),
+	)
+
+	gormLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Info,
+			IgnoreRecordNotFoundError: true,
+			Colorful:                  true,
+		},
+	)
+
+	config := &gorm.Config{
+		Logger: gormLogger,
+	}
+
+	return gorm.Open(postgres.Open(dsn), config)
 } 

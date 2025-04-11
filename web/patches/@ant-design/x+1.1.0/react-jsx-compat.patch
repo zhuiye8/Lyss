@@ -1,0 +1,16 @@
+"use strict";
+
+var React = require('react');
+var Modal = require('antd').Modal;
+var Typography = require('antd').Typography;
+
+// 修复JSX变换和React导入问题
+var ThoughtChain = function ThoughtChain(props) {
+  // ... (existing code)
+};
+
+ThoughtChain.defaultProps = {
+  thoughts: []
+};
+
+module.exports = ThoughtChain; 

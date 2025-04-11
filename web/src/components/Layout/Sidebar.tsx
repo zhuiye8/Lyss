@@ -9,6 +9,7 @@ import {
   SettingOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  FileTextOutlined
 } from '@ant-design/icons';
 
 const { Sider } = Layout;
@@ -25,6 +26,7 @@ const AppSidebar: React.FC = () => {
     if (path.startsWith('/agents')) return ['agents'];
     if (path.startsWith('/knowledge-base')) return ['knowledge'];
     if (path.startsWith('/api')) return ['api'];
+    if (path.startsWith('/logs')) return ['logs'];
     if (path.startsWith('/settings')) return ['settings'];
     return ['dashboard'];
   };
@@ -68,6 +70,12 @@ const AppSidebar: React.FC = () => {
             icon: <ApiOutlined />,
             label: 'API管理',
             onClick: () => navigate('/api'),
+          },
+          {
+            key: 'logs',
+            icon: <FileTextOutlined />,
+            label: '日志管理',
+            onClick: () => navigate('/logs'),
           },
           {
             key: 'settings',
