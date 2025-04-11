@@ -1,0 +1,63 @@
+app:
+  name: agent-platform
+  version: 0.1.0
+  env: development
+  port: 8080
+
+database:
+  driver: postgres
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  dbname: agent_platform
+  sslmode: disable
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_lifetime: 1h
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+
+milvus:
+  host: localhost
+  port: 19530
+  user: root
+  password: Milvus
+
+jwt:
+  secret: your-secret-key-here
+  expires_in: 24h
+  issuer: agent-platform
+
+model:
+  default: gpt-3.5-turbo
+  providers:
+    - name: openai
+      api_key: ${OPENAI_API_KEY}
+      base_url: https://api.openai.com/v1
+      models:
+        - gpt-3.5-turbo
+        - gpt-4-turbo
+    - name: anthropic
+      api_key: ${ANTHROPIC_API_KEY}
+      base_url: https://api.anthropic.com
+      models:
+        - claude-3-opus
+        - claude-3-sonnet
+
+storage:
+  type: minio
+  endpoint: localhost:9000
+  access_key: minioadmin
+  secret_key: minioadmin
+  bucket: agent-platform
+  use_ssl: false
+
+logging:
+  level: info
+  format: json
+  output: stdout 
