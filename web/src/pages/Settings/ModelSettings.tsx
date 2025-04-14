@@ -16,7 +16,8 @@ import {
   Popconfirm,
   Badge,
   Tooltip,
-  Collapse
+  Collapse,
+  Tag
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -29,6 +30,7 @@ import {
 } from '@ant-design/icons';
 import { getModels, addModel, updateModel, deleteModel, testModelConnection } from '../../services/dashboardService';
 import { IModelData } from '../../types/dashboard';
+import api from '../../services/api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -42,6 +44,13 @@ const ModelSettings: React.FC = () => {
   const [testingConnection, setTestingConnection] = useState(false);
   const [editingModel, setEditingModel] = useState<IModelData | null>(null);
   const [form] = Form.useForm();
+  const [providers, setProviders] = useState([
+    { value: 'openai', label: 'OpenAI' },
+    { value: 'anthropic', label: 'Anthropic' },
+    { value: 'baidu', label: '百度文心一言' },
+    { value: 'aliyun', label: '阿里通义千问' },
+    { value: 'local', label: '本地模型' }
+  ]);
 
   // 获取模型列表
   const fetchModels = async () => {
@@ -104,6 +113,7 @@ const ModelSettings: React.FC = () => {
     try {
       const values = await form.validateFields();
       setTestingConnection(true);
+      
       const success = await testModelConnection(values);
       if (success) {
         message.success('连接测试成功');
@@ -147,6 +157,16 @@ const ModelSettings: React.FC = () => {
       title: '提供商',
       dataIndex: 'provider',
       key: 'provider',
+      render: (provider: string) => {
+        const providerMap: {[key: string]: string} = {
+          'openai': 'OpenAI',
+          'anthropic': 'Anthropic',
+          'baidu': '百度',
+          'aliyun': '阿里云',
+          'local': '本地'
+        };
+        return providerMap[provider] || provider;
+      }
     },
     {
       title: '类型',
@@ -279,9 +299,13 @@ const ModelSettings: React.FC = () => {
           <Form.Item
             name="provider"
             label="提供商"
-            rules={[{ required: true, message: '请输入提供商' }]}
+            rules={[{ required: true, message: '请选择提供商' }]}
           >
-            <Input placeholder="例如: OpenAI, Anthropic, 百度, 阿里" />
+            <Select placeholder="选择模型提供商">
+              {providers.map(provider => (
+                <Option key={provider.value} value={provider.value}>{provider.label}</Option>
+              ))}
+            </Select>
           </Form.Item>
           
           <Form.Item
@@ -321,7 +345,7 @@ const ModelSettings: React.FC = () => {
           
           <Form.Item
             noStyle
-            shouldUpdate={(prevValues, currentValues) => prevValues.type !== currentValues.type}
+            shouldUpdate={(prevValues, currentValues) => prevValues.type !== currentValues.type || prevValues.provider !== currentValues.provider}
           >
             {({ getFieldValue }) => 
               getFieldValue('type') === 'cloud' ? (

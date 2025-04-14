@@ -51,6 +51,20 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 			}
 		}
 	}
+	
+	// 系统设置相关路由
+	settings := router.Group("/settings")
+	{
+		// 系统设置接口
+		settings.GET("/system", h.GetSystemSettings)
+		
+		// 管理员可修改的系统设置
+		admin := settings.Group("/")
+		admin.Use(h.authMiddleware.Authenticate(), h.authMiddleware.RequireAdmin())
+		{
+			admin.PUT("/system", h.UpdateSystemSettings)
+		}
+	}
 }
 
 // UpsertConfig 处理创建或更新配置请求
@@ -235,4 +249,32 @@ func (h *Handler) GetAllConfigs(c *gin.Context) {
 	}
 	
 	c.JSON(http.StatusOK, gin.H{"configs": configs})
+}
+
+// GetSystemSettings 处理获取系统设置请求
+func (h *Handler) GetSystemSettings(c *gin.Context) {
+	settings, err := h.service.GetSystemSettings()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取系统设置失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"settings": settings})
+}
+
+// UpdateSystemSettings 处理更新系统设置请求
+func (h *Handler) UpdateSystemSettings(c *gin.Context) {
+	var req UpdateSystemSettingsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.service.UpdateSystemSettings(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "更新系统设置失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "系统设置已更新"})
 }

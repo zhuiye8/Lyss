@@ -3,12 +3,15 @@ package agent
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/zhuiye8/Lyss/server/models"
 	"github.com/zhuiye8/Lyss/server/pkg/middleware"
 	"go.uber.org/zap"
+	"github.com/zhuiye8/Lyss/server/pkg/response"
+	"github.com/zhuiye8/Lyss/server/pkg/errorcode"
 )
 
 // Handler 处理智能体相关的HTTP请求
@@ -33,14 +36,15 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	applications := router.Group("/applications")
 	applications.Use(h.authMiddleware.Authenticate())
 	{
-		applications.GET("/:app_id/agents", h.GetAgentsByApplicationID)
-		applications.POST("/:app_id/agents", h.CreateAgent)
+		applications.GET("/by-app/:app_id/agents", h.GetAgentsByApplicationID)
+		applications.POST("/by-app/:app_id/agents", h.CreateAgent)
 	}
 
 	// 智能体操作
 	agents := router.Group("/agents")
 	agents.Use(h.authMiddleware.Authenticate())
 	{
+		agents.GET("", h.GetAgents)
 		agents.GET("/:id", h.GetAgentByID)
 		agents.PUT("/:id", h.UpdateAgent)
 		agents.DELETE("/:id", h.DeleteAgent)
@@ -92,14 +96,14 @@ func (h *Handler) GetAgentByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的智能体ID"})
+		response.Fail(c, errorcode.InvalidParameter, "无效的智能体ID")
 		return
 	}
 
 	// 从上下文获取用户ID
 	userID, exists := c.Get("user_id")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "未认证"})
+		response.Fail(c, errorcode.Unauthorized, errorcode.GetMessage(errorcode.Unauthorized))
 		return
 	}
 
@@ -107,19 +111,19 @@ func (h *Handler) GetAgentByID(c *gin.Context) {
 	agent, err := h.service.GetAgentByID(id, userID.(uuid.UUID))
 	if err != nil {
 		if errors.Is(err, ErrAgentNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "智能体不存在"})
+			response.Fail(c, errorcode.AgentNotFound, errorcode.GetMessage(errorcode.AgentNotFound))
 			return
 		}
 		if errors.Is(err, ErrUnauthorized) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "无权访问此智能体"})
+			response.Fail(c, errorcode.ResourceForbidden, "无权访问此智能体")
 			return
 		}
 		h.logger.Error("Failed to get agent", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取智能体失败"})
+		response.Fail(c, errorcode.InternalError, errorcode.GetMessage(errorcode.InternalError))
 		return
 	}
 
-	c.JSON(http.StatusOK, agent)
+	response.Success(c, agent)
 }
 
 // CreateAgent 创建新的智能体
@@ -397,4 +401,46 @@ func (h *Handler) TestAgent(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, mockResponse)
+}
+
+// GetAgents 获取所有智能体（支持分页和搜索）
+func (h *Handler) GetAgents(c *gin.Context) {
+	// 从上下文获取用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		response.Fail(c, errorcode.Unauthorized, errorcode.GetMessage(errorcode.Unauthorized))
+		return
+	}
+
+	// 获取分页参数
+	page := 1
+	pageSize := 10
+	searchQuery := ""
+
+	if pageStr := c.Query("page"); pageStr != "" {
+		if val, err := strconv.Atoi(pageStr); err == nil && val > 0 {
+			page = val
+		}
+	}
+
+	if pageSizeStr := c.Query("pageSize"); pageSizeStr != "" {
+		if val, err := strconv.Atoi(pageSizeStr); err == nil && val > 0 {
+			pageSize = val
+		}
+	}
+
+	if query := c.Query("searchQuery"); query != "" {
+		searchQuery = query
+	}
+
+	// 调用服务获取智能体列表
+	agents, total, err := h.service.GetAgents(userID.(uuid.UUID), page, pageSize, searchQuery)
+	if err != nil {
+		h.logger.Error("Failed to get agents", zap.Error(err))
+		response.Fail(c, errorcode.AgentQueryFailed, errorcode.GetMessage(errorcode.AgentQueryFailed))
+		return
+	}
+
+	// 使用统一响应格式返回数据
+	response.SuccessWithPagination(c, agents, int64(page), int64(pageSize), total)
 } 

@@ -443,4 +443,57 @@ func (s *Service) DeleteAgent(id uuid.UUID, userID uuid.UUID) error {
 	}
 
 	return nil
+}
+
+// GetAgents 获取用户有权访问的所有智能体（支持分页和搜索）
+func (s *Service) GetAgents(userID uuid.UUID, page, pageSize int, searchQuery string) ([]models.AgentResponse, int64, error) {
+	var agents []models.Agent
+	var total int64
+
+	// 构建查询
+	query := s.db.Model(&models.Agent{})
+	
+	// 根据用户ID过滤，确保用户只能看到自己的智能体
+	// 通过关联表查询，确保只返回该用户有权限的应用下的智能体
+	query = query.Joins("JOIN applications ON agents.application_id = applications.id")
+	query = query.Where("applications.created_by = ?", userID)
+	
+	// 如果有搜索查询，添加搜索条件
+	if searchQuery != "" {
+		query = query.Where("agents.name LIKE ? OR agents.description LIKE ?", 
+			"%"+searchQuery+"%", "%"+searchQuery+"%")
+	}
+	
+	// 获取总数
+	if err := query.Count(&total).Error; err != nil {
+		s.logger.Error("Failed to count agents", zap.Error(err))
+		return nil, 0, err
+	}
+	
+	// 分页
+	offset := (page - 1) * pageSize
+	query = query.Offset(offset).Limit(pageSize)
+	
+	// 执行查询
+	if err := query.Find(&agents).Error; err != nil {
+		s.logger.Error("Failed to find agents", zap.Error(err))
+		return nil, 0, err
+	}
+	
+	// 转换为响应格式并获取每个智能体关联的知识库
+	response := make([]models.AgentResponse, len(agents))
+	for i, agent := range agents {
+		// 获取智能体关联的知识库IDs
+		var knowledgeBaseIDs []uuid.UUID
+		if err := s.db.Model(&models.AgentKnowledgeBase{}).
+			Where("agent_id = ?", agent.ID).
+			Pluck("knowledge_base_id", &knowledgeBaseIDs).Error; err != nil {
+			s.logger.Error("Failed to get knowledge base IDs", zap.Error(err))
+		}
+		
+		// 转换为响应格式
+		response[i] = agent.ToResponse(knowledgeBaseIDs)
+	}
+	
+	return response, total, nil
 } 

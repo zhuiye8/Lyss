@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/zhuiye8/Lyss/server/models"
@@ -32,6 +33,54 @@ type UpsertConfigRequest struct {
 	Value   string `json:"value"`
 	Scope   string `json:"scope" binding:"required,oneof=system user project application"`
 	ScopeID string `json:"scope_id,omitempty"`
+}
+
+// UpdateSystemSettingsRequest 系统设置更新请求
+type UpdateSystemSettingsRequest struct {
+	SiteName          string `json:"siteName"`
+	LogoURL           string `json:"logoUrl"`
+	APIRateLimit      int    `json:"apiRateLimit"`
+	AllowRegistration bool   `json:"allowRegistration"`
+	DefaultLanguage   string `json:"defaultLanguage"`
+	DefaultModel      string `json:"defaultModel"`
+	StorageProvider   string `json:"storageProvider"`
+	S3Config          struct {
+		Bucket    string `json:"bucket"`
+		Region    string `json:"region"`
+		AccessKey string `json:"accessKey"`
+		SecretKey string `json:"secretKey"`
+	} `json:"s3Config"`
+	EmailSettings struct {
+		SMTPServer   string `json:"smtpServer"`
+		SMTPPort     int    `json:"smtpPort"`
+		SMTPUser     string `json:"smtpUser"`
+		SMTPPassword string `json:"smtpPassword"`
+		SenderEmail  string `json:"senderEmail"`
+	} `json:"emailSettings"`
+}
+
+// SystemSettings 系统设置响应
+type SystemSettings struct {
+	SiteName          string `json:"siteName"`
+	LogoURL           string `json:"logoUrl"`
+	APIRateLimit      int    `json:"apiRateLimit"`
+	AllowRegistration bool   `json:"allowRegistration"`
+	DefaultLanguage   string `json:"defaultLanguage"`
+	DefaultModel      string `json:"defaultModel"`
+	StorageProvider   string `json:"storageProvider"`
+	S3Config          struct {
+		Bucket    string `json:"bucket"`
+		Region    string `json:"region"`
+		AccessKey string `json:"accessKey"`
+		SecretKey string `json:"secretKey"`
+	} `json:"s3Config"`
+	EmailSettings struct {
+		SMTPServer   string `json:"smtpServer"`
+		SMTPPort     int    `json:"smtpPort"`
+		SMTPUser     string `json:"smtpUser"`
+		SMTPPassword string `json:"smtpPassword,omitempty"`
+		SenderEmail  string `json:"senderEmail"`
+	} `json:"emailSettings"`
 }
 
 // UpsertConfig 创建或更新配置
@@ -235,4 +284,218 @@ func (s *Service) DeleteConfig(id uuid.UUID, userID uuid.UUID) error {
 	}
 	
 	return nil
+}
+
+// GetSystemSettings 获取系统设置
+func (s *Service) GetSystemSettings() (*SystemSettings, error) {
+	// 从系统配置中获取设置
+	configs, err := s.GetSystemConfigs()
+	if err != nil {
+		return nil, err
+	}
+	
+	// 构造系统设置对象
+	settings := &SystemSettings{
+		SiteName:          "智能体构建平台",
+		LogoURL:           "/logo.png",
+		APIRateLimit:      100,
+		AllowRegistration: true,
+		DefaultLanguage:   "zh-CN",
+		DefaultModel:      "",
+		StorageProvider:   "local",
+	}
+	
+	// 填充从配置中获取的值
+	for _, config := range configs {
+		switch config.Key {
+		case "site.name":
+			settings.SiteName = config.Value
+		case "site.logo_url":
+			settings.LogoURL = config.Value
+		case "api.rate_limit":
+			if limit, err := strconv.Atoi(config.Value); err == nil {
+				settings.APIRateLimit = limit
+			}
+		case "user.allow_registration":
+			settings.AllowRegistration = config.Value == "true"
+		case "site.default_language":
+			settings.DefaultLanguage = config.Value
+		case "model.default":
+			settings.DefaultModel = config.Value
+		case "storage.provider":
+			settings.StorageProvider = config.Value
+		case "storage.s3.bucket":
+			settings.S3Config.Bucket = config.Value
+		case "storage.s3.region":
+			settings.S3Config.Region = config.Value
+		case "storage.s3.access_key":
+			settings.S3Config.AccessKey = config.Value
+		case "email.smtp_server":
+			settings.EmailSettings.SMTPServer = config.Value
+		case "email.smtp_port":
+			if port, err := strconv.Atoi(config.Value); err == nil {
+				settings.EmailSettings.SMTPPort = port
+			}
+		case "email.smtp_user":
+			settings.EmailSettings.SMTPUser = config.Value
+		case "email.sender":
+			settings.EmailSettings.SenderEmail = config.Value
+		}
+	}
+	
+	return settings, nil
+}
+
+// UpdateSystemSettings 更新系统设置
+func (s *Service) UpdateSystemSettings(req UpdateSystemSettingsRequest) error {
+	// 更新系统设置
+	tx := s.db.Begin()
+	
+	// 更新基本设置
+	if req.SiteName != "" {
+		if err := s.setConfig(tx, "site.name", req.SiteName, models.ScopeSystem, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	
+	if req.LogoURL != "" {
+		if err := s.setConfig(tx, "site.logo_url", req.LogoURL, models.ScopeSystem, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	
+	if req.APIRateLimit > 0 {
+		if err := s.setConfig(tx, "api.rate_limit", strconv.Itoa(req.APIRateLimit), models.ScopeSystem, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	
+	if err := s.setConfig(tx, "user.allow_registration", strconv.FormatBool(req.AllowRegistration), models.ScopeSystem, nil); err != nil {
+		tx.Rollback()
+		return err
+	}
+	
+	if req.DefaultLanguage != "" {
+		if err := s.setConfig(tx, "site.default_language", req.DefaultLanguage, models.ScopeSystem, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	
+	if req.DefaultModel != "" {
+		if err := s.setConfig(tx, "model.default", req.DefaultModel, models.ScopeSystem, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	
+	if req.StorageProvider != "" {
+		if err := s.setConfig(tx, "storage.provider", req.StorageProvider, models.ScopeSystem, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	
+	// 更新S3配置
+	if req.StorageProvider == "s3" {
+		if req.S3Config.Bucket != "" {
+			if err := s.setConfig(tx, "storage.s3.bucket", req.S3Config.Bucket, models.ScopeSystem, nil); err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+		
+		if req.S3Config.Region != "" {
+			if err := s.setConfig(tx, "storage.s3.region", req.S3Config.Region, models.ScopeSystem, nil); err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+		
+		if req.S3Config.AccessKey != "" {
+			if err := s.setConfig(tx, "storage.s3.access_key", req.S3Config.AccessKey, models.ScopeSystem, nil); err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+		
+		if req.S3Config.SecretKey != "" {
+			if err := s.setConfig(tx, "storage.s3.secret_key", req.S3Config.SecretKey, models.ScopeSystem, nil); err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+	}
+	
+	// 更新邮件设置
+	if req.EmailSettings.SMTPServer != "" {
+		if err := s.setConfig(tx, "email.smtp_server", req.EmailSettings.SMTPServer, models.ScopeSystem, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	
+	if req.EmailSettings.SMTPPort > 0 {
+		if err := s.setConfig(tx, "email.smtp_port", strconv.Itoa(req.EmailSettings.SMTPPort), models.ScopeSystem, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	
+	if req.EmailSettings.SMTPUser != "" {
+		if err := s.setConfig(tx, "email.smtp_user", req.EmailSettings.SMTPUser, models.ScopeSystem, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	
+	if req.EmailSettings.SMTPPassword != "" {
+		if err := s.setConfig(tx, "email.smtp_password", req.EmailSettings.SMTPPassword, models.ScopeSystem, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	
+	if req.EmailSettings.SenderEmail != "" {
+		if err := s.setConfig(tx, "email.sender", req.EmailSettings.SenderEmail, models.ScopeSystem, nil); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	
+	return tx.Commit().Error
+}
+
+// setConfig 设置配置项（内部方法，用于批量更新）
+func (s *Service) setConfig(tx *gorm.DB, key, value string, scope models.ConfigScope, scopeID *uuid.UUID) error {
+	var config models.Config
+	
+	query := tx.Where("key = ? AND scope = ?", key, scope)
+	if scopeID != nil {
+		query = query.Where("scope_id = ?", *scopeID)
+	} else {
+		query = query.Where("scope_id IS NULL")
+	}
+	
+	if err := query.First(&config).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// 创建新配置
+			newConfig := models.Config{
+				Key:     key,
+				Value:   value,
+				Scope:   scope,
+				ScopeID: scopeID,
+			}
+			
+			return tx.Create(&newConfig).Error
+		}
+		return err
+	}
+	
+	// 更新现有配置
+	config.Value = value
+	return tx.Save(&config).Error
 } 

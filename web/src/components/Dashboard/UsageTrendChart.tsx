@@ -1,29 +1,19 @@
 import React from 'react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
-} from 'recharts';
 import { Card, Radio, Spin } from 'antd';
 import { IUsageData } from '../../types/dashboard';
 
 interface UsageTrendChartProps {
   data: IUsageData[];
-  loading?: boolean;
+  loading: boolean;
   timeRange: '7d' | '30d' | '90d';
   onTimeRangeChange: (range: '7d' | '30d' | '90d') => void;
 }
 
 const UsageTrendChart: React.FC<UsageTrendChartProps> = ({
   data,
-  loading = false,
+  loading,
   timeRange,
-  onTimeRangeChange,
+  onTimeRangeChange
 }) => {
   return (
     <Card
@@ -31,7 +21,8 @@ const UsageTrendChart: React.FC<UsageTrendChartProps> = ({
       extra={
         <Radio.Group 
           value={timeRange}
-          onChange={(e) => onTimeRangeChange(e.target.value)}
+          onChange={e => onTimeRangeChange(e.target.value)}
+          optionType="button"
           buttonStyle="solid"
           size="small"
         >
@@ -42,43 +33,33 @@ const UsageTrendChart: React.FC<UsageTrendChartProps> = ({
       }
     >
       {loading ? (
-        <div style={{ height: 300, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <Spin tip="加载中..." />
+        <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Spin />
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart
-            data={data}
-            margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis yAxisId="left" />
-            <YAxis yAxisId="right" orientation="right" />
-            <Tooltip />
-            <Legend />
-            <Line
-              yAxisId="left"
-              type="monotone"
-              dataKey="tokens"
-              name="Token 使用量"
-              stroke="#8884d8"
-              activeDot={{ r: 8 }}
-            />
-            <Line
-              yAxisId="right"
-              type="monotone"
-              dataKey="conversations"
-              name="对话数"
-              stroke="#82ca9d"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <div style={{ height: 300, padding: '20px 0' }}>
+          {/* 简化版，只显示数据而不绘制图表 */}
+          <div style={{ maxHeight: 260, overflowY: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+                  <th style={{ padding: '8px', textAlign: 'left' }}>日期</th>
+                  <th style={{ padding: '8px', textAlign: 'right' }}>对话数</th>
+                  <th style={{ padding: '8px', textAlign: 'right' }}>Token 使用量</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((item, index) => (
+                  <tr key={index} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                    <td style={{ padding: '8px', textAlign: 'left' }}>{item.date}</td>
+                    <td style={{ padding: '8px', textAlign: 'right' }}>{item.conversations}</td>
+                    <td style={{ padding: '8px', textAlign: 'right' }}>{item.tokens.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </Card>
   );

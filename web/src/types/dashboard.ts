@@ -7,8 +7,8 @@ export interface IStatisticData {
 
 export interface IUsageData {
   date: string;
-  tokens: number;
   conversations: number;
+  tokens: number;
 }
 
 export interface IAgentData {
@@ -67,16 +67,14 @@ export interface ISystemSettings {
 export interface ITopAgent {
   id: string;
   name: string;
-  usageCount: number;
-  tokenUsage: number;
+  usage: number;
+  successRate: number;
 }
 
 export interface IRecentActivity {
   id: string;
-  type: 'agent_created' | 'agent_updated' | 'conversation' | 'knowledge_updated';
-  agentId?: string;
-  agentName?: string;
-  timestamp: string;
-  user: string;
-  details: string;
+  type: string;
+  content: string;
+  time: string;
+  userId: string;
 } 

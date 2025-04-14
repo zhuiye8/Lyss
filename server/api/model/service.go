@@ -452,7 +452,7 @@ func (s *Service) UpdateModelUsageMetrics(configID uuid.UUID, success bool, toke
 	config.UsageMetrics = metrics
 	
 	// 序列化指标
-	if err := config.BeforeSave(); err != nil {
+	if err := config.BeforeSave(s.db); err != nil {
 		return err
 	}
 	

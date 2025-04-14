@@ -1,8 +1,7 @@
 import React from 'react';
-import { List, Card, Tag, Avatar, Skeleton } from 'antd';
+import { Card, List, Avatar, Tag, Spin } from 'antd';
 import { 
   RobotOutlined, 
-  EditOutlined, 
   CommentOutlined, 
   DatabaseOutlined,
   UserOutlined 
@@ -11,82 +10,85 @@ import { IRecentActivity } from '../../types/dashboard';
 
 interface RecentActivitiesProps {
   activities: IRecentActivity[];
-  loading?: boolean;
+  loading: boolean;
 }
 
-const RecentActivities: React.FC<RecentActivitiesProps> = ({
-  activities,
-  loading = false,
-}) => {
-  // 根据活动类型获取图标
-  const getActivityIcon = (type: string) => {
+const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities, loading }) => {
+  // 根据活动类型返回图标
+  const getIcon = (type: string) => {
     switch (type) {
       case 'agent_created':
-        return <RobotOutlined style={{ color: '#1890ff' }} />;
       case 'agent_updated':
-        return <EditOutlined style={{ color: '#faad14' }} />;
+        return <RobotOutlined style={{ color: '#1890ff' }} />;
       case 'conversation':
         return <CommentOutlined style={{ color: '#52c41a' }} />;
-      case 'knowledge_updated':
+      case 'knowledge_base':
         return <DatabaseOutlined style={{ color: '#722ed1' }} />;
       default:
-        return <RobotOutlined />;
+        return <UserOutlined style={{ color: '#fa8c16' }} />;
     }
   };
 
-  // 根据活动类型获取标签
-  const getActivityTag = (type: string) => {
+  // 根据活动类型返回颜色
+  const getTagColor = (type: string) => {
     switch (type) {
       case 'agent_created':
-        return <Tag color="blue">创建智能体</Tag>;
+        return 'blue';
       case 'agent_updated':
-        return <Tag color="orange">更新智能体</Tag>;
+        return 'cyan';
       case 'conversation':
-        return <Tag color="green">新对话</Tag>;
-      case 'knowledge_updated':
-        return <Tag color="purple">更新知识库</Tag>;
+        return 'green';
+      case 'knowledge_base':
+        return 'purple';
       default:
-        return <Tag>活动</Tag>;
+        return 'orange';
+    }
+  };
+
+  // 根据活动类型返回标签文字
+  const getTagText = (type: string) => {
+    switch (type) {
+      case 'agent_created':
+        return '创建智能体';
+      case 'agent_updated':
+        return '更新智能体';
+      case 'conversation':
+        return '对话';
+      case 'knowledge_base':
+        return '知识库';
+      default:
+        return '活动';
     }
   };
 
   return (
     <Card title="最近活动">
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
+          <Spin />
+        </div>
+      ) : (
       <List
         itemLayout="horizontal"
         dataSource={activities}
-        loading={loading}
-        renderItem={(item) => (
+          renderItem={item => (
           <List.Item>
-            <Skeleton avatar title={false} loading={loading} active>
               <List.Item.Meta
-                avatar={
-                  <Avatar icon={<UserOutlined />} />
-                }
+                avatar={<Avatar icon={getIcon(item.type)} />}
                 title={
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ marginRight: 8 }}>{item.user}</span>
-                    {getActivityTag(item.type)}
+                    <span>{item.content}</span>
+                    <Tag color={getTagColor(item.type)} style={{ marginLeft: 8 }}>
+                      {getTagText(item.type)}
+                    </Tag>
                   </div>
                 }
-                description={
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-                      {getActivityIcon(item.type)}
-                      <span style={{ marginLeft: 8 }}>
-                        {item.agentName && `${item.agentName}: `}{item.details}
-                      </span>
-                    </div>
-                    <div style={{ color: '#8c8c8c', fontSize: 12 }}>
-                      {new Date(item.timestamp).toLocaleString()}
-                    </div>
-                  </div>
-                }
+                description={item.time}
               />
-            </Skeleton>
           </List.Item>
         )}
       />
+      )}
     </Card>
   );
 };

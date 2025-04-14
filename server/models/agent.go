@@ -1,10 +1,13 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"database/sql/driver"
+	"errors"
 )
 
 // Agent 智能体模型
@@ -30,6 +33,31 @@ type Agent struct {
 
 // JSONMap 是JSON字段的辅助类型
 type JSONMap map[string]interface{}
+
+// Scan 实现 sql.Scanner 接口
+func (j *JSONMap) Scan(value interface{}) error {
+	if value == nil {
+		*j = make(JSONMap)
+		return nil
+	}
+
+	switch v := value.(type) {
+	case []byte:
+		return json.Unmarshal(v, j)
+	case string:
+		return json.Unmarshal([]byte(v), j)
+	default:
+		return errors.New("无法将数据库值转换为JSONMap")
+	}
+}
+
+// Value 实现 driver.Valuer 接口
+func (j JSONMap) Value() (driver.Value, error) {
+	if j == nil {
+		return nil, nil
+	}
+	return json.Marshal(j)
+}
 
 // AgentKnowledgeBase 智能体与知识库的多对多关联
 type AgentKnowledgeBase struct {

@@ -29,6 +29,7 @@ import (
 	authPkg "github.com/zhuiye8/Lyss/server/pkg/auth"
 	"github.com/zhuiye8/Lyss/server/pkg/encryption"
 	"github.com/zhuiye8/Lyss/server/pkg/middleware"
+	"github.com/zhuiye8/Lyss/server/api/dashboard"
 )
 
 func main() {
@@ -135,14 +136,41 @@ func main() {
 	conversationService := conversation.NewService(db)
 	conversationHandler := conversation.NewHandler(conversationService, authMiddleware)
 
+	// 初始化仪表盘服务
+	dashboardService := dashboard.NewService(db)
+	dashboardHandler := dashboard.NewHandler(dashboardService, authMiddleware)
+
 	// 创建路由
 	r := gin.Default()
 
+	// 添加请求ID中间件
+	r.Use(middleware.RequestID())
+	
+	// 添加错误处理中间件
+	r.Use(middleware.ErrorHandler(logger))
+	
+	// 允许跨域
+	r.Use(middleware.CORS())
+
 	// 健康检查
 	r.GET("/health", func(c *gin.Context) {
+		// 检查数据库连接
+		if err := db.Raw("SELECT 1").Error; err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"status": "error",
+				"message": "数据库连接失败",
+				"error": err.Error(),
+				"time": time.Now().Format(time.RFC3339),
+			})
+			return
+		}
+
+		// 返回服务信息
 		c.JSON(http.StatusOK, gin.H{
 			"status": "ok",
-			"time":   time.Now().Format(time.RFC3339),
+			"version": viper.GetString("app.version"),
+			"environment": viper.GetString("app.env"),
+			"time": time.Now().Format(time.RFC3339),
 		})
 	})
 
@@ -166,6 +194,7 @@ func main() {
 		// 注册新增的处理器路由
 		agentHandler.RegisterRoutes(api)
 		conversationHandler.RegisterRoutes(api)
+		dashboardHandler.RegisterRoutes(api)
 	}
 
 	// 启动服务

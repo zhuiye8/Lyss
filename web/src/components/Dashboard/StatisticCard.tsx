@@ -1,17 +1,15 @@
 import React from 'react';
 import { Card, Statistic } from 'antd';
 import { 
-  RobotOutlined,
-  CommentOutlined,
-  UserOutlined,
-  ThunderboltOutlined
+  RobotOutlined, 
+  CommentOutlined, 
+  UserOutlined, 
+  ApiOutlined 
 } from '@ant-design/icons';
 
 interface StatisticCardProps {
   title: string;
   value: number | string;
-  prefix?: string;
-  suffix?: string;
   type: 'agents' | 'conversations' | 'users' | 'tokens';
   loading?: boolean;
 }
@@ -19,8 +17,6 @@ interface StatisticCardProps {
 const StatisticCard: React.FC<StatisticCardProps> = ({
   title,
   value,
-  prefix,
-  suffix,
   type,
   loading = false
 }) => {
@@ -28,48 +24,41 @@ const StatisticCard: React.FC<StatisticCardProps> = ({
   const getIcon = () => {
     switch (type) {
       case 'agents':
-        return <RobotOutlined style={{ fontSize: 20, color: '#1890ff' }} />;
+        return <RobotOutlined />;
       case 'conversations':
-        return <CommentOutlined style={{ fontSize: 20, color: '#52c41a' }} />;
+        return <CommentOutlined />;
       case 'users':
-        return <UserOutlined style={{ fontSize: 20, color: '#fa8c16' }} />;
+        return <UserOutlined />;
       case 'tokens':
-        return <ThunderboltOutlined style={{ fontSize: 20, color: '#722ed1' }} />;
+        return <ApiOutlined />;
       default:
-        return null;
+        return <RobotOutlined />;
     }
   };
 
-  // 根据类型选择卡片颜色
-  const getCardStyle = () => {
+  // 根据类型设置颜色
+  const getColor = () => {
     switch (type) {
       case 'agents':
-        return { borderTop: '3px solid #1890ff' };
+        return '#1890ff';
       case 'conversations':
-        return { borderTop: '3px solid #52c41a' };
+        return '#52c41a';
       case 'users':
-        return { borderTop: '3px solid #fa8c16' };
+        return '#722ed1';
       case 'tokens':
-        return { borderTop: '3px solid #722ed1' };
+        return '#fa8c16';
       default:
-        return {};
+        return '#1890ff';
     }
   };
 
   return (
-    <Card 
-      style={{ ...getCardStyle(), height: '100%' }} 
-      loading={loading}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-        {getIcon()}
-        <span style={{ marginLeft: 8, color: '#8c8c8c' }}>{title}</span>
-      </div>
-      <Statistic 
-        value={value} 
-        prefix={prefix} 
-        suffix={suffix}
-        valueStyle={{ color: '#000000', fontSize: 24, fontWeight: 'bold' }}
+    <Card loading={loading} bodyStyle={{ padding: '20px' }}>
+      <Statistic
+        title={title}
+        value={value}
+        valueStyle={{ color: getColor() }}
+        prefix={getIcon()}
       />
     </Card>
   );

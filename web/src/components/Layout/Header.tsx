@@ -8,6 +8,29 @@ const { Header } = Layout;
 const AppHeader: React.FC = () => {
   const navigate = useNavigate();
 
+  // 处理登出逻辑
+  const handleLogout = () => {
+    console.log('执行登出...');
+    
+    // 清除所有认证信息
+    try {
+      localStorage.removeItem('token');
+      console.log('已清除localStorage token');
+    } catch (e) {
+      console.error('清除localStorage失败:', e);
+    }
+    
+    try {
+      sessionStorage.removeItem('isLoggedIn');
+      console.log('已清除sessionStorage');
+    } catch (e) {
+      console.error('清除sessionStorage失败:', e);
+    }
+    
+    // 重定向到登录页面
+    navigate('/login');
+  };
+
   const userMenu = (
     <Menu
       items={[
@@ -28,10 +51,7 @@ const AppHeader: React.FC = () => {
           key: 'logout',
           label: '退出登录',
           danger: true,
-          onClick: () => {
-            // 处理登出逻辑
-            console.log('用户登出');
-          },
+          onClick: handleLogout,
         },
       ]}
     />

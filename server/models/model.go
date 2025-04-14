@@ -245,8 +245,8 @@ type ModelConfig struct {
 	Description     string              `json:"description" gorm:"type:text;"`
 	ModelID         uuid.UUID           `json:"model_id" gorm:"type:uuid;not null;"`
 	Model           *Model              `json:"model" gorm:"foreignKey:ModelID;"`
-	Parameters      ModelParameters     `json:"parameters" gorm:"type:jsonb;default:'{}'::jsonb;"`
-	ProviderConfig  ModelProviderConfig `json:"provider_config" gorm:"type:jsonb;default:'{}'::jsonb;"`
+	Parameters      ModelParameters     `json:"parameters" gorm:"type:jsonb;"`
+	ProviderConfig  ModelProviderConfig `json:"provider_config" gorm:"type:jsonb;"`
 	IsShared        bool                `json:"is_shared" gorm:"default:false;"`
 	UsageMetrics    ModelUsageMetrics   `json:"usage_metrics" gorm:"-"`
 	UsageMetricsStr string              `json:"-" gorm:"column:usage_metrics;type:text;"`
@@ -256,27 +256,26 @@ type ModelConfig struct {
 	UpdatedAt       time.Time           `json:"updated_at" gorm:"type:timestamp with time zone;not null;default:CURRENT_TIMESTAMP;"`
 }
 
-// BeforeSave GORM钩子，保存前处理
-func (c *ModelConfig) BeforeSave() error {
-	if c.ID == uuid.Nil {
-		c.ID = uuid.New()
-	}
-	
-	// 将使用指标转为JSON字符串
-	if c.UsageMetrics != (ModelUsageMetrics{}) {
-		bytes, err := json.Marshal(c.UsageMetrics)
-		if err != nil {
-			return err
-		}
-		c.UsageMetricsStr = string(bytes)
-	}
-	
+// BeforeCreate 在创建模型配置前生成UUID
+func (c *ModelConfig) BeforeCreate(tx *gorm.DB) error {
+	c.ID = uuid.New()
 	return nil
 }
 
-// AfterFind GORM钩子，查询后处理
-func (c *ModelConfig) AfterFind() error {
-	// 将JSON字符串转为使用指标
+// BeforeSave 在保存前处理UsageMetrics
+func (c *ModelConfig) BeforeSave(tx *gorm.DB) error {
+	if c.UsageMetrics != (ModelUsageMetrics{}) {
+		data, err := json.Marshal(c.UsageMetrics)
+		if err != nil {
+			return err
+		}
+		c.UsageMetricsStr = string(data)
+	}
+	return nil
+}
+
+// AfterFind 在查询后处理UsageMetrics
+func (c *ModelConfig) AfterFind(tx *gorm.DB) error {
 	if c.UsageMetricsStr != "" {
 		return json.Unmarshal([]byte(c.UsageMetricsStr), &c.UsageMetrics)
 	}

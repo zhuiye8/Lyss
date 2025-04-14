@@ -30,7 +30,7 @@ func NewHandler(service *Service, authMiddleware *middleware.AuthMiddleware) *Ha
 // RegisterRoutes 注册对话相关的路由
 func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	// 智能体下的对话
-	agentConversations := router.Group("/agents/:agent_id/conversations")
+	agentConversations := router.Group("/agents/by-id/:agent_id/conversations")
 	agentConversations.Use(h.authMiddleware.Authenticate())
 	{
 		agentConversations.GET("", h.GetConversationsByAgentID)
@@ -43,9 +43,9 @@ func (h *Handler) RegisterRoutes(router *gin.RouterGroup) {
 	{
 		conversations.GET("/:id", h.GetConversationByID)
 		conversations.DELETE("/:id", h.DeleteConversation)
-		conversations.GET("/:conv_id/messages", h.GetMessagesByConversationID)
-		conversations.POST("/:conv_id/messages", h.SendMessage)
-		conversations.POST("/:conv_id/regenerate", h.RegenerateResponse)
+		conversations.GET("/message/:conv_id/messages", h.GetMessagesByConversationID)
+		conversations.POST("/message/:conv_id/messages", h.SendMessage)
+		conversations.POST("/message/:conv_id/regenerate", h.RegenerateResponse)
 	}
 
 	// 消息操作
